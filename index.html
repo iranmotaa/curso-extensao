@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  CineMatch - Gerador de Séries/Filmes
+  ============================================================
+  Este é o arquivo HTML: ele define a ESTRUTURA da página,
+  ou seja, QUAIS elementos existem (títulos, imagens, botões...).
+
+  - O CSS (style.css) cuida da APARÊNCIA (cores, tamanhos, sombras).
+  - O JavaScript (script.js) cuida do COMPORTAMENTO (o que acontece
+    quando clicamos no botão).
+-->
+<html lang="pt-BR">
+
+<head>
+  <!-- "charset" garante que acentos (ç, ã, é) apareçam corretamente -->
+  <meta charset="UTF-8">
+
+  <!-- Faz a página se adaptar bem a telas de celular -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Texto que aparece na aba do navegador -->
+  <title>CineMatch - Sorteie sua próxima série</title>
+
+  <!-- Importa uma fonte moderna do Google Fonts (Poppins) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <!-- Liga este HTML ao nosso arquivo de estilos -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- "container" é uma caixa que centraliza todo o conteúdo na tela -->
+  <main class="container">
+
+    <!-- LOGO: o nome do nosso app -->
+    <h1 class="logo">Cine<span>Match</span></h1>
+    <p class="subtitulo">Não sabe o que assistir? Deixa que a gente escolhe!</p>
+
+    <!-- CARD: a "caixinha" onde a série sorteada vai aparecer.
+         Cada elemento tem um "id" (identificador único).
+         O JavaScript usa esses ids para encontrar e alterar cada parte. -->
+    <section class="card" id="card">
+
+      <!-- Imagem da capa. Começa com uma imagem "vazia" (placeholder) -->
+      <img
+        id="capa"
+        class="capa"
+        src="https://placehold.co/300x420/222/555?text=%3F"
+        alt="Capa da série sorteada"
+      >
+
+      <!-- Área de informações (texto) do card -->
+      <div class="info">
+        <h2 id="titulo" class="titulo">Clique no botão para sortear!</h2>
+
+        <!-- Nota e gênero ficam lado a lado -->
+        <div class="detalhes">
+          <span id="nota" class="nota">⭐ --</span>
+          <span id="genero" class="genero">Gênero</span>
+        </div>
+
+        <!-- Sinopse (resumo da história) -->
+        <p id="sinopse" class="sinopse">
+          A sinopse da série vai aparecer aqui.
+        </p>
+      </div>
+    </section>
+
+    <!-- BOTÃO principal. O JavaScript vai "escutar" o clique nele -->
+    <button id="botao-sortear" class="botao">🎬 Sortear Série/Filme</button>
+
+  </main>
+
+  <!-- Liga o arquivo JavaScript. Fica no FINAL do body para que
+       todos os elementos acima já existam quando o script rodar. -->
+  <script src="script.js"></script>
+</body>
+
+</html>
