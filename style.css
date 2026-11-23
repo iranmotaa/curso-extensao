@@ -13,20 +13,18 @@
    - "#capa"    -> o JOGO DA VELHA seleciona o elemento com id="capa"
    ============================================================ */
 
-
 /* ---------- 1. VARIÁVEIS DE COR ----------
    Guardamos as cores em "variáveis" para reutilizar.
    Quer mudar o tema? Troque só aqui! */
 :root {
-  --fundo: #141414;          /* Preto estilo Netflix */
-  --card: #1f1f1f;           /* Cinza bem escuro para o card */
-  --vermelho: #e50914;       /* Vermelho Netflix */
-  --vermelho-escuro: #b20710;
-  --texto: #ffffff;
-  --texto-suave: #b3b3b3;    /* Cinza claro para textos secundários */
-  --dourado: #f5c518;        /* Cor da estrelinha da nota */
+  --fundo: #141414; /* Preto estilo Netflix */
+  --card: #1f1f1f; /* Cinza bem escuro para o card */
+  --primaria: #e50914; /* Vermelho Netflix */
+  --secundaria: #b20710;
+  --texto-primario: #ffffff;
+  --texto-secundario: #b3b3b3; /* Cinza claro para textos secundários */
+  --avaliacao: #f5c518; /* Cor da estrelinha da nota */
 }
-
 
 /* ---------- 2. RESET BÁSICO ----------
    Os navegadores colocam margens automáticas nos elementos.
@@ -37,33 +35,31 @@
   box-sizing: border-box; /* largura inclui borda e padding (mais fácil de calcular) */
 }
 
-
 /* ---------- 3. CORPO DA PÁGINA ---------- */
 body {
   background-color: var(--fundo);
-  color: var(--texto);
-  font-family: 'Poppins', sans-serif; /* se a Poppins falhar, usa uma fonte sem serifa */
-  min-height: 100vh;                  /* ocupa no mínimo 100% da altura da tela */
+  color: var(--texto-primario);
+  font-family:
+    "Poppins", sans-serif; /* se a Poppins falhar, usa uma fonte sem serifa */
+  min-height: 100vh; /* ocupa no mínimo 100% da altura da tela */
 
   /* Flexbox: técnica para CENTRALIZAR o conteúdo na tela */
   display: flex;
   justify-content: center; /* centraliza na horizontal */
-  align-items: center;     /* centraliza na vertical */
+  align-items: center; /* centraliza na vertical */
   padding: 20px;
 }
-
 
 /* ---------- 4. CONTAINER ---------- */
 .container {
   width: 100%;
-  max-width: 720px;   /* nunca fica mais largo que 720px */
+  max-width: 720px; /* nunca fica mais largo que 720px */
   text-align: center;
 }
 
-
 /* ---------- 5. LOGO ---------- */
 .logo {
-  font-size: 3rem;          /* rem = relativo ao tamanho padrão da fonte */
+  font-size: 3rem; /* rem = relativo ao tamanho padrão da fonte */
   font-weight: 800;
   letter-spacing: 2px;
   color: var(--vermelho);
@@ -72,20 +68,19 @@ body {
 
 /* A palavra "Match" (dentro do <span>) fica branca */
 .logo span {
-  color: var(--texto);
+  color: var(--texto-primario);
 }
 
 .subtitulo {
-  color: var(--texto-suave);
+  color: var(--texto-secundario);
   margin-bottom: 30px;
 }
-
 
 /* ---------- 6. CARD ---------- */
 .card {
   background-color: var(--card);
-  border-radius: 16px;  /* cantos arredondados */
-  overflow: hidden;     /* impede que a imagem "vaze" dos cantos arredondados */
+  border-radius: 16px; /* cantos arredondados */
+  overflow: hidden; /* impede que a imagem "vaze" dos cantos arredondados */
 
   /* Sombra: deslocamento-x | deslocamento-y | desfoque | cor */
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
@@ -96,7 +91,9 @@ body {
   margin-bottom: 30px;
 
   /* Animação suave quando algo mudar */
-  transition: transform 0.3s, opacity 0.3s;
+  transition:
+    transform 0.3s,
+    opacity 0.3s;
 }
 
 /* Classe que o JavaScript adiciona enquanto carrega (efeito "piscar") */
@@ -107,15 +104,15 @@ body {
 
 .capa {
   width: 240px;
-  object-fit: cover;   /* a imagem preenche o espaço sem distorcer */
-  flex-shrink: 0;      /* a imagem não encolhe */
+  object-fit: cover; /* a imagem preenche o espaço sem distorcer */
+  flex-shrink: 0; /* a imagem não encolhe */
 }
 
 .info {
   padding: 24px;
   display: flex;
   flex-direction: column; /* itens um embaixo do outro */
-  gap: 12px;              /* espaço entre os itens */
+  gap: 12px; /* espaço entre os itens */
 }
 
 .titulo {
@@ -130,39 +127,38 @@ body {
 }
 
 .nota {
-  color: var(--dourado);
+  color: var(--avaliacao);
   font-weight: 600;
 }
 
 /* O gênero aparece como uma "etiqueta" (badge) */
 .genero {
   background-color: #333;
-  color: var(--texto-suave);
+  color: var(--texto-secundario);
   padding: 2px 10px;
   border-radius: 20px;
   font-size: 0.85rem;
 }
 
 .sinopse {
-  color: var(--texto-suave);
+  color: var(--texto-secundario);
   font-size: 0.95rem;
-  line-height: 1.5;      /* espaço entre linhas, melhora a leitura */
+  line-height: 1.5; /* espaço entre linhas, melhora a leitura */
   max-height: 220px;
-  overflow-y: auto;      /* se a sinopse for muito grande, aparece rolagem */
+  overflow-y: auto; /* se a sinopse for muito grande, aparece rolagem */
 }
-
 
 /* ---------- 7. BOTÃO ---------- */
 .botao {
-  background-color: var(--vermelho);
-  color: var(--texto);
-  font-family: inherit;  /* usa a mesma fonte da página */
+  background-color: var(--primaria);
+  color: var(--texto-primario);
+  font-family: inherit; /* usa a mesma fonte da página */
   font-size: 1.2rem;
   font-weight: 600;
   padding: 16px 40px;
   border: none;
-  border-radius: 50px;   /* formato de "pílula" */
-  cursor: pointer;       /* mostra a "mãozinha" ao passar o mouse */
+  border-radius: 50px; /* formato de "pílula" */
+  cursor: pointer; /* mostra a "mãozinha" ao passar o mouse */
 
   /* Brilho neon vermelho em volta do botão */
   box-shadow: 0 0 20px rgba(229, 9, 20, 0.6);
@@ -171,8 +167,8 @@ body {
 
 /* :hover = quando o mouse está EM CIMA do botão */
 .botao:hover {
-  background-color: var(--vermelho-escuro);
-  transform: scale(1.07);                     /* cresce um pouquinho */
+  background-color: var(--secundaria);
+  transform: scale(1.07); /* cresce um pouquinho */
   box-shadow: 0 0 35px rgba(229, 9, 20, 0.9); /* brilho mais forte */
 }
 
@@ -186,7 +182,6 @@ body {
   opacity: 0.6;
   cursor: wait;
 }
-
 
 /* ---------- 8. RESPONSIVO (CELULAR) ----------
    @media aplica estas regras SÓ quando a tela tiver até 600px.
