@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CineMatch: Criando Aplicações Web com Consumo de APIs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#15171c;
+    --ink:#f2f3f7;
+    --muted:#a6aebf;
+    --line:#2c303b;
+    --card:#1e2129;
+    --red:#e50914;
+    --red-dark:#b20710;
+    --red-bright:#ff4d57;
+    --gold:#f5c518;
+    --html:#fb923c;
+    --css:#ff4d57;
+    --js:#f0b429;
+    --dark:#0d0f13;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Poppins","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 90% -12%, rgba(229,9,20,.22), transparent 62%),
+      radial-gradient(760px 440px at -10% 108%, rgba(245,197,24,.10), transparent 60%),
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px) 0 0/46px 46px,
+      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px) 0 0/46px 46px;
+  }
+  .deck{position:relative;z-index:1;height:100%}
+
+  .slide{
+    position:absolute;inset:0;display:none;flex-direction:column;
+    gap:clamp(10px,1.6vh,22px);
+    padding:clamp(22px,3.6vh,52px) clamp(26px,4.6vw,76px) clamp(58px,7vh,84px);
+  }
+  .slide.active{display:flex;animation:in .38s ease both}
+  @keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  .kicker{
+    display:flex;align-items:center;gap:.6em;
+    font-size:clamp(11px,1vw,15px);font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent,var(--css));
+  }
+  .kicker::before{content:"";width:clamp(22px,2.4vw,38px);height:4px;border-radius:99px;background:currentColor}
+  h1{font-size:clamp(26px,3.15vw,52px);line-height:1.08;letter-spacing:-.02em;font-weight:800;max-width:24ch}
+  .sub{font-size:clamp(14px,1.28vw,22px);color:var(--muted);max-width:54ch;line-height:1.5}
+  .sub b{color:var(--ink)}
+
+  .body{flex:1;display:grid;grid-template-columns:1.02fr .98fr;gap:clamp(16px,2.6vw,44px);align-items:center;min-height:0}
+  .col{display:flex;flex-direction:column;gap:clamp(9px,1.5vh,18px);min-width:0}
+
+  .panel{
+    position:relative;height:100%;min-height:0;
+    background:var(--card);border:1px solid var(--line);border-radius:clamp(14px,1.5vw,24px);
+    box-shadow:0 18px 40px -26px rgba(0,0,0,.65),0 2px 6px rgba(0,0,0,.3);
+    padding:clamp(14px,2vh,26px);
+    display:flex;flex-direction:column;gap:clamp(8px,1.2vh,14px);overflow:hidden;
+  }
+  .panel-label{
+    font-size:clamp(10px,.9vw,13px);font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);display:flex;align-items:center;gap:.5em;
+  }
+  .panel-label::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  .item{
+    display:flex;gap:clamp(10px,1.1vw,16px);align-items:flex-start;
+    background:var(--card);border:1px solid var(--line);border-left:5px solid var(--accent,var(--css));
+    border-radius:14px;padding:clamp(9px,1.35vh,16px) clamp(12px,1.3vw,20px);
+    box-shadow:0 10px 24px -22px rgba(0,0,0,.9);
+  }
+  .item .ico{font-size:clamp(19px,1.85vw,30px);line-height:1.1;flex:none}
+  .item h3{font-size:clamp(14px,1.3vw,21px);font-weight:800;letter-spacing:-.01em}
+  .item p{font-size:clamp(12px,1.06vw,17px);color:var(--muted);line-height:1.45;margin-top:2px}
+  .item p b{color:var(--ink)}
+  .item code, .note code{
+    font-family:"Cascadia Code",Consolas,monospace;
+    background:#2a2e39;border:1px solid #3b4152;border-radius:6px;
+    padding:.05em .35em;font-size:.92em;color:#ffb3bb;white-space:nowrap;
+  }
+
+  .code{
+    background:var(--dark);border-radius:14px;overflow:hidden;
+    border:1px solid #26262a;box-shadow:0 16px 34px -26px rgba(0,0,0,.9);
+    font-family:"Cascadia Code",Consolas,"Courier New",monospace;
+    font-size:clamp(11px,1.04vw,16px);line-height:1.62;
+  }
+  .code .bar{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#1b1b1f;border-bottom:1px solid #26262a}
+  .code .bar i{width:9px;height:9px;border-radius:99px;background:#ff5f57;display:block}
+  .code .bar i:nth-child(2){background:#febc2e}
+  .code .bar i:nth-child(3){background:#28c840}
+  .code .bar span{margin-left:8px;font-size:.82em;color:#8b8b93;letter-spacing:.04em}
+  .code pre{padding:clamp(10px,1.4vh,16px) clamp(12px,1.2vw,18px);overflow:auto;white-space:pre;color:#e7e7ea}
+  .k{color:#ff8fa3}.s{color:#9ae08a}.f{color:#82aaff}.n{color:#f7a06c}.t{color:#ff7b72}.c{color:#8b8b93}.p{color:#8ea2c8}
+
+  nav{
+    position:fixed;z-index:9;left:0;right:0;bottom:0;
+    display:flex;align-items:center;gap:14px;
+    padding:clamp(8px,1.2vh,14px) clamp(26px,4.6vw,76px);
+    background:linear-gradient(to top,rgba(21,23,28,.97),rgba(21,23,28,.55) 70%,transparent);
+  }
+  .dots{display:flex;gap:6px;flex:1;flex-wrap:wrap}
+  .dot{width:9px;height:9px;border-radius:99px;border:0;padding:0;cursor:pointer;background:#3a4050;transition:.2s}
+  .dot:hover{background:#5f6980}
+  .dot.on{background:var(--accent,var(--css));width:26px}
+  .navbtn{
+    border:1px solid var(--line);background:var(--card);color:var(--ink);
+    width:clamp(30px,2.4vw,40px);height:clamp(30px,2.4vw,40px);border-radius:11px;
+    font-size:15px;cursor:pointer;display:grid;place-items:center;transition:.15s;
+    box-shadow:0 6px 14px -12px rgba(0,0,0,.9);
+  }
+  .navbtn:hover{background:#262a33;transform:translateY(-1px)}
+  .navbtn.on{background:var(--red);color:#fff;border-color:var(--red)}
+  .counter{font-size:clamp(11px,.95vw,14px);font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;min-width:4.2em;text-align:right}
+  .progress{position:fixed;left:0;bottom:0;height:3px;z-index:10;background:var(--accent,var(--css));transition:width .3s ease;width:0}
+
+  /* capa */
+  .cover{justify-content:center;gap:clamp(12px,2vh,26px);background:var(--dark);overflow:hidden}
+  .cover::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:
+      radial-gradient(700px 380px at 82% 12%, rgba(229,9,20,.35), transparent 65%),
+      radial-gradient(600px 340px at 8% 100%, rgba(245,197,24,.14), transparent 65%);
+  }
+  .cover > *{position:relative}
+  .cover .badge{
+    align-self:flex-start;display:inline-flex;align-items:center;gap:.55em;
+    border:1px solid #3a3a3f;color:#d8d8dd;border-radius:99px;
+    padding:.45em 1em;font-size:clamp(10px,.95vw,13px);font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;
+  }
+  .logo-mark{font-weight:800;font-size:clamp(40px,6.2vw,104px);line-height:.95;letter-spacing:-.03em;color:var(--red)}
+  .logo-mark span{color:#fff}
+  .cover h1{font-size:clamp(24px,2.9vw,44px);color:#fff;max-width:22ch;font-weight:600;letter-spacing:-.01em}
+  .cover h1 em{font-style:normal;color:var(--gold)}
+  .cover .sub{color:#b6b6bd;font-size:clamp(14px,1.35vw,23px);max-width:46ch}
+  .cover .strip{display:flex;gap:clamp(8px,1vw,14px);flex-wrap:wrap;margin-top:clamp(4px,1vh,10px)}
+  .chip{
+    display:flex;align-items:center;gap:.5em;
+    background:#1e1e22;border:1px solid #333338;border-radius:99px;
+    padding:.5em 1em;font-weight:600;font-size:clamp(12px,1.05vw,17px);color:#e6e6ea;
+  }
+  .chip .sw{width:.7em;height:.7em;border-radius:3px}
+
+  /* boneco */
+  .figure-wrap{flex:1;display:grid;grid-template-columns:1fr auto;gap:clamp(10px,1.6vw,24px);align-items:center;min-height:0}
+  .figure{
+    position:relative;width:100%;height:100%;min-height:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    background:radial-gradient(circle at 50% 45%, #232733, #191c23 70%);
+    border-radius:12px;border:1px dashed #343a48;padding:10px;
+  }
+  .fig-head,.fig-torso,.fig-legs{position:relative;transition:.25s ease}
+  .fig-head{width:clamp(46px,5vw,78px);height:clamp(46px,5vw,78px);border-radius:50%;background:#2a2f3b;border:3px solid #3d4454;display:grid;place-items:center}
+  .fig-torso{width:clamp(90px,9.6vw,150px);height:clamp(74px,8vh,120px);border-radius:18px 18px 12px 12px;background:#2a2f3b;border:3px solid #3d4454;display:grid;place-items:center;margin-top:-4px}
+  .fig-legs{display:flex;gap:clamp(10px,1.2vw,18px);margin-top:-4px}
+  .fig-legs span{position:relative;width:clamp(22px,2.4vw,38px);height:clamp(34px,4.4vh,62px);background:#2a2f3b;border:3px solid #3d4454;border-radius:8px 8px 12px 12px}
+  .fig-brain{position:absolute;font-size:clamp(20px,2.1vw,34px);transition:.25s;filter:grayscale(.35)}
+  .fig-skin{position:absolute;inset:-3px;border-radius:inherit;background:linear-gradient(160deg,#ff8a80,#e50914);opacity:0;transition:.3s}
+  .fig-torso .fig-skin{border-radius:18px 18px 12px 12px}
+  .fig-head .fig-skin{border-radius:50%}
+  .fig-legs span .fig-skin{border-radius:8px 8px 12px 12px}
+  .fig-skel{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(16px,1.7vw,26px);opacity:0;transition:.3s}
+  .figure.f-html .fig-skel{opacity:1}
+  .figure.f-html .fig-head,.figure.f-html .fig-torso,.figure.f-html .fig-legs span{background:transparent;border-style:dashed}
+  /* JS = o boneco ganha vida: anda, balança os braços e pensa */
+  .fig-torso::before,.fig-torso::after{
+    content:"";position:absolute;top:8%;height:76%;width:clamp(10px,1.1vw,16px);border-radius:99px;
+    background:#2a2f3b;border:3px solid #3d4454;opacity:0;transform-origin:50% 7px;transition:opacity .3s
+  }
+  .fig-torso::before{right:100%;margin-right:3px}
+  .fig-torso::after{left:100%;margin-left:3px}
+  @keyframes fig-swing{0%,100%{transform:rotate(-26deg)}50%{transform:rotate(26deg)}}
+  @keyframes fig-stride{0%,100%{transform:rotate(-17deg)}50%{transform:rotate(17deg)}}
+  @keyframes fig-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  @keyframes fig-think{0%,100%{filter:drop-shadow(0 0 0 rgba(240,180,41,0))}50%{filter:drop-shadow(0 0 9px rgba(240,180,41,.95))}}
+  .figure.f-js .fig-head,.figure.f-js .fig-torso,.figure.f-js .fig-legs{animation:fig-bob .4s ease-in-out infinite}
+  .figure.f-js .fig-head,.figure.f-js .fig-torso,.figure.f-js .fig-legs span{border-color:var(--js)}
+  .figure.f-js .fig-torso::before,.figure.f-js .fig-torso::after{opacity:1;border-color:var(--js);animation:fig-swing .8s ease-in-out infinite}
+  .figure.f-js .fig-torso::before{animation-delay:-.4s}
+  .figure.f-js .fig-legs span{transform-origin:50% 0;animation:fig-stride .8s ease-in-out infinite}
+  .figure.f-js .fig-legs span:last-child{animation-delay:-.4s}
+  .figure.f-js .fig-brain{animation:fig-think 1.2s ease-in-out infinite}
+  @media (prefers-reduced-motion:reduce){
+    .figure.f-js *,.figure.f-js .fig-torso::before,.figure.f-js .fig-torso::after{animation:none!important}
+  }
+
+  /* HTML = esqueleto desenhado com CSS */
+  .figure.f-html:not(.f-js) .fig-brain{opacity:0}
+  .figure.f-html .fig-head,.figure.f-html .fig-torso,.figure.f-html .fig-legs span{border-color:#2f3543}
+  .fig-skel{display:block}
+  .fig-skel::before,.fig-skel::after{content:"";position:absolute}
+  /* caveira */
+  .fig-head .fig-skel{inset:5px 5px 2px;border-radius:50% 50% 38% 38%;
+    background:
+      radial-gradient(ellipse 15% 17% at 32% 46%,#15171c 97%,transparent),
+      radial-gradient(ellipse 15% 17% at 68% 46%,#15171c 97%,transparent),
+      radial-gradient(ellipse 6% 9% at 50% 66%,#15171c 97%,transparent),
+      #ece9dd}
+  .fig-head .fig-skel::after{left:27%;right:27%;bottom:-1px;height:20%;border-radius:0 0 6px 6px;
+    background:repeating-linear-gradient(90deg,#ece9dd 0 4px,#8d8a7c 4px 5px)}
+  /* caixa torácica: costelas, coluna e ossos dos braços */
+  .fig-torso .fig-skel{inset:12% 18% 8%;border:4px solid #ece9dd;border-radius:50% 50% 40% 40%/45% 45% 55% 55%;
+    background:repeating-linear-gradient(180deg,transparent 0 15%,#ece9dd 15% 25%)}
+  .fig-torso .fig-skel::before{left:50%;top:-14%;bottom:-10%;width:6px;transform:translateX(-50%);border-radius:99px;background:#ece9dd}
+  .fig-torso .fig-skel::after{left:-30%;right:-30%;top:-4%;height:7px;border-radius:99px;background:#ece9dd}
+  /* ossos das pernas */
+  .fig-legs span .fig-skel{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse 15% 11% at 36% 8%,#ece9dd 96%,transparent),
+      radial-gradient(ellipse 15% 11% at 64% 8%,#ece9dd 96%,transparent),
+      radial-gradient(ellipse 15% 11% at 36% 92%,#ece9dd 96%,transparent),
+      radial-gradient(ellipse 15% 11% at 64% 92%,#ece9dd 96%,transparent),
+      linear-gradient(90deg,transparent 38%,#ece9dd 38% 62%,transparent 62%) 0 50%/100% 78% no-repeat}
+
+  /* CSS = roupa pintada no boneco */
+  .figure.f-css .fig-skin{opacity:1}
+  .figure.f-css:not(.f-js) .fig-brain{opacity:0}
+  .fig-skin::before,.fig-skin::after{content:"";position:absolute}
+  /* boné: metade de cima da cabeça + aba */
+  .fig-head .fig-skin{background:linear-gradient(180deg,#f5c518 0 46%,transparent 46%)}
+  .fig-head .fig-skin::after{left:38%;top:34%;width:78%;height:13%;border-radius:0 99px 99px 0;background:#c99a00}
+  /* camiseta: manga, gola e botões */
+  .fig-torso .fig-skin{background:linear-gradient(180deg,#38bdf8,#0ea5e9 60%,#0284c7)}
+  .fig-torso .fig-skin::before{left:-17%;right:-17%;top:-1%;height:52%;border-radius:12px 12px 8px 8px;
+    background:linear-gradient(90deg,#0284c7 0 20%,transparent 20% 80%,#0284c7 80%)}
+  .fig-torso .fig-skin::after{left:50%;top:0;width:28%;height:20%;transform:translateX(-50%);
+    border-radius:0 0 99px 99px;background:#e8b98f;border:3px solid #7dd3fc;border-top:0;box-sizing:border-box}
+  /* calça jeans: cós, costura e barra */
+  .fig-legs span .fig-skin{
+    background:
+      linear-gradient(180deg,#172554 0 12%,transparent 12%),
+      linear-gradient(180deg,#2563eb,#1e40af 70%,#93c5fd 70% 76%,#1e40af 76%);
+  }
+  .fig-legs span .fig-skin::before{left:50%;top:14%;bottom:26%;width:2px;background:rgba(255,255,255,.35)}
+  .fig-legs span:first-child .fig-skin::before{left:auto;right:18%}
+  .fig-legs span:last-child .fig-skin::before{left:18%}
+  .figure.f-js .fig-brain{opacity:1;filter:none;transform:scale(1.15)}
+  .figure:not(.f-js) .fig-brain{opacity:.3}
+  .fig-tag{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:clamp(9px,.82vw,12px);font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8b96ad}
+
+  .tri{display:flex;flex-direction:column;gap:clamp(8px,1.2vh,14px)}
+  .tri-card{
+    display:flex;align-items:center;gap:clamp(10px,1.2vw,18px);
+    border-radius:16px;padding:clamp(10px,1.5vh,18px) clamp(12px,1.4vw,22px);
+    background:#1e2129;border:1px solid var(--line);border-left:7px solid var(--c);cursor:default;transition:.2s;
+    box-shadow:0 12px 26px -24px rgba(0,0,0,.9);
+  }
+  .tri-card:hover{transform:translateX(4px);box-shadow:0 16px 30px -22px rgba(0,0,0,.85)}
+  .tri-card .ico{font-size:clamp(22px,2.2vw,36px)}
+  .tri-card h3{font-size:clamp(15px,1.4vw,24px);font-weight:800}
+  .tri-card p{font-size:clamp(12px,1.02vw,17px);color:var(--muted);margin-top:1px}
+  .tri-card .tag{
+    margin-left:auto;font-size:clamp(9px,.8vw,12px);font-weight:800;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--c);background:color-mix(in srgb,var(--c) 18%,var(--card));
+    border-radius:99px;padding:.45em .8em;white-space:nowrap;
+  }
+
+  .rg{width:min(100%,340px);background:linear-gradient(160deg,#232733,#1b1e26);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:0 18px 34px -26px rgba(0,0,0,.95);display:flex;gap:14px;align-items:center}
+  .rg .pic{width:clamp(48px,4.6vw,68px);height:clamp(48px,4.6vw,68px);border-radius:10px;flex:none;background:linear-gradient(160deg,#ff8a80,#e50914);display:grid;place-items:center;font-size:clamp(20px,2vw,30px)}
+  .rg .f{font-size:clamp(8px,.7vw,10px);letter-spacing:.16em;font-weight:800;color:#8b93a6;text-transform:uppercase}
+  .rg .v{font-family:"Cascadia Code",Consolas,monospace;font-weight:700;font-size:clamp(12px,1.12vw,18px);color:#ff9aa6}
+  .rg .stamp{margin-left:auto;font-size:clamp(8px,.7vw,10px);font-weight:900;letter-spacing:.1em;color:#fff;background:#16a34a;border-radius:6px;padding:.35em .55em;transform:rotate(-8deg)}
+
+  .sel-rows{display:flex;flex-direction:column;gap:clamp(7px,1vh,12px)}
+  .sel{display:grid;grid-template-columns:auto 1fr auto;gap:clamp(8px,1vw,16px);align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:clamp(8px,1.1vh,13px) clamp(10px,1.1vw,16px)}
+  .sel code{font-family:"Cascadia Code",Consolas,monospace;font-weight:800;font-size:clamp(12px,1.12vw,19px)}
+  .sel .what{font-size:clamp(11px,.98vw,16px);color:var(--muted)}
+  .sel .what b{color:var(--ink)}
+  .sel .n{font-size:clamp(9px,.78vw,12px);font-weight:800;color:#fff;border-radius:6px;padding:.3em .5em}
+  .sel:nth-child(1) .n{background:#16a34a}
+  .sel:nth-child(2) .n{background:#e50914}
+  .sel:nth-child(3) .n{background:#9333ea}
+
+  .demo{flex:1;min-height:0;border-radius:12px;background:radial-gradient(circle at 1px 1px,#343a48 1px,transparent 0) 0 0/16px 16px,#191c23;border:1px dashed #343a48;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:14px;overflow:hidden}
+  .flexbox{display:flex;flex-direction:row;gap:10px;width:100%;height:100%;align-items:center;justify-content:center;transition:.25s}
+  .flexbox .bx{width:clamp(40px,4.2vw,68px);height:clamp(40px,4.2vw,68px);border-radius:12px;display:grid;place-items:center;font-weight:800;color:#fff;font-size:clamp(13px,1.25vw,20px);box-shadow:0 10px 18px -12px rgba(229,9,20,.9)}
+  .flexbox .bx:nth-child(1){background:#e50914}
+  .flexbox .bx:nth-child(2){background:#f2545b}
+  .flexbox .bx:nth-child(3){background:#f89aa0;color:#15171c}
+  .ctrls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .ctrl{border:1px solid var(--line);background:var(--card);border-radius:9px;cursor:pointer;padding:.45em .8em;font-size:clamp(10px,.92vw,14px);font-weight:700;color:var(--muted);transition:.15s;font-family:inherit}
+  .ctrl:hover{border-color:#4a5266;color:var(--ink)}
+  .ctrl.on{background:var(--red);color:#fff;border-color:var(--red)}
+
+  .hover-stage{flex:1;display:grid;place-items:center;position:relative;min-height:0}
+  .neon{
+    font-family:inherit;cursor:pointer;border:0;border-radius:999px;
+    padding:clamp(12px,1.7vh,20px) clamp(20px,2.6vw,40px);
+    font-size:clamp(13px,1.4vw,23px);font-weight:800;letter-spacing:.02em;color:#fff;
+    background:var(--red);box-shadow:0 0 20px rgba(229,9,20,.6);
+    transition:transform .18s ease, box-shadow .25s ease, background-color .25s;
+  }
+  .neon:hover{transform:scale(1.07);background:var(--red-dark);box-shadow:0 0 35px rgba(229,9,20,.9)}
+  .neon:active{transform:scale(.97)}
+  .hint{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:clamp(9px,.82vw,12px);font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7c8698}
+
+  .boxes{display:grid;grid-template-columns:1fr 1fr;gap:clamp(10px,1.4vw,20px);flex:1;min-height:0;align-items:stretch}
+  .box{border-radius:16px;padding:clamp(10px,1.5vh,18px);display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;border:1px solid var(--line);background:var(--card)}
+  .box .obj{font-size:clamp(26px,2.8vw,46px);line-height:1}
+  .box h3{font-size:clamp(13px,1.2vw,20px);font-weight:800}
+  .box p{font-size:clamp(10px,.92vw,14px);color:var(--muted);line-height:1.4}
+  .box.steel{background:linear-gradient(180deg,#232733,#1b1e26)}
+  .box.card{background:linear-gradient(180deg,#2b2519,#211e17);border-color:#4a3d22}
+
+  .bridge{flex:1;display:grid;grid-template-columns:1fr auto 1fr;gap:clamp(6px,.8vw,12px);align-items:center;min-height:0}
+  .side{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:clamp(9px,1.2vh,14px);display:flex;flex-direction:column;gap:6px;height:100%;justify-content:center}
+  .side .ttl{font-size:clamp(9px,.8vw,12px);font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8b93a6}
+  .side pre{font-family:"Cascadia Code",Consolas,monospace;font-size:clamp(10px,.92vw,14px);line-height:1.55;color:#dfe6f5;white-space:pre-wrap;word-break:break-word}
+  .deck-bridge{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--red-bright);font-weight:800;font-size:clamp(10px,.88vw,13px);letter-spacing:.08em}
+  .deck-bridge .bar{width:clamp(28px,3.4vw,56px);height:10px;border-radius:99px;background:linear-gradient(90deg,#e50914,#f89aa0)}
+  .deck-bridge .lbl{font-size:.85em;color:#8b93a6}
+
+  .drawers{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(6px,.8vw,12px);flex:1;min-height:0;align-content:center}
+  .drawer{border:1px solid var(--line);border-radius:10px;background:var(--card);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 22px -20px rgba(0,0,0,.95)}
+  .drawer .idx{background:var(--dark);color:#fff;font-family:"Cascadia Code",Consolas,monospace;font-size:clamp(10px,.88vw,14px);font-weight:800;padding:.35em;text-align:center}
+  .drawer .val{flex:1;display:grid;place-items:center;text-align:center;padding:8px 6px;font-size:clamp(9px,.8vw,13px);font-weight:700;color:#dfe6f5;line-height:1.25}
+  .drawer:nth-child(odd) .val{background:#232733}
+
+  /* API */
+  .api{flex:1;display:flex;flex-direction:column;justify-content:center;gap:clamp(8px,1.2vh,16px);min-height:0}
+  .api-row{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:clamp(4px,.6vw,10px)}
+  .actor{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:clamp(8px,1.1vh,14px) 6px;text-align:center;display:flex;flex-direction:column;gap:2px}
+  .actor .e{font-size:clamp(18px,1.9vw,30px);line-height:1.2}
+  .actor .n{font-size:clamp(9px,.82vw,13px);font-weight:800;color:#dfe6f5}
+  .actor .d{font-size:clamp(8px,.7vw,11px);color:#8b93a6}
+  .arrow{color:#c2c8d6;font-size:clamp(12px,1.15vw,18px);font-weight:800;text-align:center}
+  .json{
+    background:var(--dark);border-radius:10px;padding:clamp(8px,1.2vh,14px) clamp(10px,1vw,16px);
+    font-family:"Cascadia Code",Consolas,monospace;font-size:clamp(9px,.86vw,13px);line-height:1.6;
+    color:#e7e7ea;white-space:pre;overflow:auto;border:1px solid #26262a;
+  }
+  .json .key{color:#82aaff}.json .str{color:#9ae08a}.json .num{color:#f7a06c}.json .pun{color:#8b8b93}
+
+  /* API — diagrama do caminho da informação */
+  .flow-body{grid-template-columns:1fr}
+  .flow{justify-content:space-between;gap:clamp(10px,2vh,24px)}
+  .flow-row{
+    flex:1;min-height:0;display:grid;align-items:center;
+    grid-template-columns:minmax(0,1.15fr) minmax(0,.8fr) minmax(0,1.15fr) minmax(0,.8fr) minmax(0,1.15fr);
+    gap:clamp(4px,.8vw,14px);
+  }
+  .fnode{
+    background:#232733;border:1px solid #3b4152;border-radius:clamp(12px,1.2vw,20px);
+    padding:clamp(10px,1.8vh,22px) clamp(8px,1vw,16px);
+    display:flex;flex-direction:column;align-items:center;text-align:center;gap:clamp(3px,.6vh,8px);
+  }
+  .fnode.api{border-color:#5a2a2e;background:#2a1a1d}
+  .fnode .fi{font-size:clamp(28px,3.6vw,60px);line-height:1.1}
+  .fnode .fn{font-size:clamp(13px,1.45vw,23px);font-weight:800}
+  .fnode .fd{font-size:clamp(10px,.9vw,14px);color:#a6aebf;line-height:1.35}
+  .fscreen{
+    width:100%;margin-top:clamp(2px,.6vh,8px);background:var(--dark);border:2px solid #4b5266;border-radius:12px;
+    padding:clamp(6px,1vh,12px);display:flex;flex-direction:column;align-items:center;line-height:1.15;
+  }
+  .fscreen small{font-size:clamp(8px,.75vw,12px);color:#a6aebf;font-weight:700}
+  .fscreen .big{font-size:clamp(20px,2.4vw,40px);font-weight:800;color:#fff}
+  .fscreen .cond{font-size:clamp(10px,.95vw,15px);font-weight:700;color:var(--gold)}
+  .fdb{
+    width:100%;margin-top:clamp(2px,.6vh,8px);background:var(--dark);border:1px solid #26262a;border-radius:10px;
+    font-family:"Cascadia Code",Consolas,monospace;font-size:clamp(9px,.82vw,13px);overflow:hidden;
+  }
+  .fdb div{display:flex;justify-content:space-between;gap:.6em;padding:.4em .7em;color:#8b93a6}
+  .fdb div + div{border-top:1px solid #1c1f27}
+  .fdb .hit{background:#2a2412;color:var(--gold);font-weight:800}
+  .flink{display:flex;flex-direction:column;gap:clamp(14px,3.2vh,40px)}
+  .fl{display:flex;flex-direction:column;gap:5px;color:var(--c)}
+  .fl .t{display:flex;align-items:center;justify-content:center;gap:.45em;text-align:center;font-size:clamp(9px,.9vw,14px);font-weight:800;line-height:1.2}
+  .fl .ln{height:3px;background:currentColor;border-radius:2px;position:relative}
+  .fl .ln::after{content:"";position:absolute;top:50%;transform:translateY(-50%);border-top:6px solid transparent;border-bottom:6px solid transparent}
+  .fl.req .ln::after{right:-2px;border-left:10px solid currentColor}
+  .fl.res .ln::after{left:-2px;border-right:10px solid currentColor}
+  .fl.req{--c:#ff4d57}
+  .fl.res{--c:#4ade80}
+  .fb{
+    flex:none;display:inline-grid;place-items:center;width:1.7em;height:1.7em;border-radius:50%;
+    background:var(--c,#ff4d57);color:#0d0f13;font-weight:800;font-size:.95em;
+  }
+  .flow-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:clamp(6px,.8vw,14px)}
+  .fstep{
+    display:flex;gap:.6em;align-items:flex-start;background:#232733;border:1px solid var(--line);
+    border-radius:12px;padding:clamp(7px,1.1vh,13px) clamp(8px,.9vw,14px);
+    font-size:clamp(10px,.92vw,15px);line-height:1.4;color:#c9cfdd;
+  }
+  .fstep b{color:#fff}
+  .fstep .fb{font-size:clamp(10px,.9vw,14px)}
+
+  /* Seletores — mini site interativo */
+  .sel{cursor:pointer;transition:.2s}
+  .sel.on{border-color:var(--sc);background:color-mix(in srgb,var(--sc) 14%,var(--card))}
+  .rule{display:block;padding:.2em .6em;margin:0 -.6em .3em;border-radius:6px;opacity:.4;transition:.2s}
+  .rule.on{opacity:1;background:rgba(255,255,255,.07);box-shadow:inset 3px 0 0 var(--rc)}
+  .mp[data-sel="tag"]{--mc:#22c55e}
+  .mp[data-sel="class"]{--mc:#ff4d57}
+  .mp[data-sel="id"]{--mc:#c084fc}
+  .mp-tabs{display:flex;gap:clamp(6px,.8vw,12px)}
+  .mp-tab{
+    flex:1;font:inherit;cursor:pointer;border:2px solid var(--tc);border-radius:10px;background:transparent;color:var(--tc);
+    font-weight:800;padding:.45em .4em;font-size:clamp(11px,1vw,16px);line-height:1.2;transition:.2s
+  }
+  .mp-tab small{display:block;font-family:"Cascadia Code",Consolas,monospace;font-weight:700;font-size:.82em}
+  .mp-tab.on{background:var(--tc);color:#0d0f13}
+  .mp-window{flex:1;min-height:0;background:var(--dark);border:1px solid #26262a;border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+  .mp-bar{display:flex;align-items:center;gap:6px;padding:7px 12px;background:#1b1b1f;border-bottom:1px solid #26262a}
+  .mp-bar i{width:9px;height:9px;border-radius:99px;background:#ff5f57;display:block}
+  .mp-bar i:nth-child(2){background:#febc2e}
+  .mp-bar i:nth-child(3){background:#28c840}
+  .mp-bar span{margin-left:8px;font-size:clamp(9px,.8vw,12px);color:#8b8b93;letter-spacing:.04em}
+  .mp-page{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:clamp(6px,.9vw,12px);padding:clamp(8px,1.1vw,14px)}
+  .mp-page > *{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;
+    border:2px dashed #3b4152;border-radius:10px;background:#242834;color:#c9cfdd;cursor:default;
+    font-family:"Cascadia Code",Consolas,monospace;font-size:clamp(10px,.95vw,15px);font-weight:700;line-height:1.3;padding:.3em;transition:.25s
+  }
+  .mp-page small{font-size:.8em;color:#8b93a6;font-weight:600}
+  .mp[data-sel="tag"] .mp-page button,
+  .mp[data-sel="class"] .mp-page .card,
+  .mp[data-sel="id"] .mp-page #capa{
+    background:var(--mc);border:2px solid var(--mc);color:#0d0f13;transform:scale(1.06);
+    box-shadow:0 0 22px color-mix(in srgb,var(--mc) 65%,transparent)
+  }
+  .mp[data-sel="tag"] .mp-page button small,
+  .mp[data-sel="class"] .mp-page .card small,
+  .mp[data-sel="id"] .mp-page #capa small{color:rgba(13,15,19,.75)}
+  .mp-status{display:flex;align-items:center;gap:.7em;font-size:clamp(11px,1vw,16px);line-height:1.4;color:var(--muted)}
+  .mp-status b{color:var(--ink)}
+  .mp-status .cnt{flex:none;display:grid;place-items:center;min-width:2.1em;height:2.1em;border-radius:99px;background:var(--mc);color:#0d0f13;font-weight:800;transition:.2s}
+
+  /* const / let / var — código rodando de verdade */
+  .vt-tabs{display:flex;gap:clamp(6px,.8vw,12px)}
+  .vt{
+    flex:1;font:inherit;cursor:pointer;border:2px solid var(--tc);border-radius:12px;background:transparent;color:var(--tc);
+    padding:.5em .4em;font-size:clamp(15px,1.6vw,26px);font-weight:800;line-height:1.15;transition:.2s;
+    font-family:"Cascadia Code",Consolas,monospace
+  }
+  .vt small{display:block;font-family:"Poppins","Segoe UI",sans-serif;font-weight:600;font-size:clamp(9px,.78vw,12px);margin-top:2px;opacity:.9}
+  .vt.on{background:var(--tc);color:#0d0f13}
+  .ln{display:block;padding:0 .6em;margin:0 -.6em;border-radius:5px}
+  .ln.bad{background:rgba(255,77,87,.2);box-shadow:inset 3px 0 0 #ff4d57}
+  .ln.warn{background:rgba(240,180,41,.18);box-shadow:inset 3px 0 0 #f0b429}
+  .vp[data-v="const"]{--vc:#94a3b8}
+  .vp[data-v="let"]{--vc:#f0b429}
+  .vp[data-v="var"]{--vc:#ff4d57}
+  .vcon{
+    background:var(--dark);border:1px solid #26262a;border-radius:12px;padding:clamp(8px,1.2vh,14px) clamp(10px,1vw,16px);
+    font-family:"Cascadia Code",Consolas,monospace;font-size:clamp(11px,1vw,16px);line-height:1.7;min-height:5.6em;color:#e7e7ea
+  }
+  .vcon .h{font-size:.74em;letter-spacing:.14em;text-transform:uppercase;color:#6b7385;font-weight:800;margin-bottom:2px}
+  .vline{display:block;opacity:0;animation:vin .3s ease forwards;animation-delay:calc(var(--i)*.45s)}
+  .vline.err{color:#ff7b72}
+  .vline.log{color:#9ae08a}
+  .vline::before{content:"› ";color:#6b7385}
+  .vline.err::before{content:"✖ ";color:#ff7b72}
+  @keyframes vin{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+  .vverdict{
+    display:flex;gap:.7em;align-items:flex-start;border:1px solid var(--vc);border-left-width:6px;border-radius:12px;
+    background:color-mix(in srgb,var(--vc) 12%,var(--card));padding:clamp(8px,1.2vh,14px) clamp(10px,1vw,16px);
+    font-size:clamp(11px,1.02vw,16.5px);line-height:1.45;color:#dfe6f5
+  }
+  .vverdict b{color:#fff}
+  .vverdict .tagv{flex:none;font-size:.78em;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:var(--vc);color:#0d0f13;border-radius:6px;padding:.25em .55em;margin-top:.1em}
+  .vtable{width:100%;border-collapse:separate;border-spacing:0;font-size:clamp(9.5px,.88vw,14px);text-align:center;overflow:hidden;border:1px solid var(--line);border-radius:10px}
+  .vtable th,.vtable td{padding:.45em .5em;border-bottom:1px solid var(--line);color:var(--muted);transition:.2s}
+  .vtable tr:last-child td,.vtable tr:last-child th{border-bottom:0}
+  .vtable thead th{font-family:"Cascadia Code",Consolas,monospace;color:#c9cfdd;background:#232733}
+  .vtable th:first-child,.vtable td:first-child{text-align:left;color:#a6aebf;font-weight:600}
+  .vp[data-v="const"] [data-c="const"],.vp[data-v="let"] [data-c="let"],.vp[data-v="var"] [data-c="var"]{
+    background:color-mix(in srgb,var(--vc) 22%,var(--card));color:#fff;font-weight:800
+  }
+
+  /* Funções — com e sem, rodando de verdade */
+  .vt.ft{font-family:inherit;font-size:clamp(12px,1.18vw,19px)}
+  .ln.good{background:rgba(34,197,94,.16);box-shadow:inset 3px 0 0 #22c55e}
+  .chg{background:#ffe08a;color:#0d0f13!important;border-radius:4px;padding:0 .25em;font-weight:800}
+  .fp[data-f="sem"]{--vc:#ff4d57}
+  .fp[data-f="com"]{--vc:#22c55e}
+  .fn-rule{
+    font:inherit;cursor:pointer;border:2px dashed #6b7385;border-radius:12px;background:transparent;color:#dfe6f5;
+    font-weight:700;padding:.55em .8em;font-size:clamp(11px,1vw,16px);transition:.2s;text-align:center
+  }
+  .fn-rule:hover{border-color:#ffe08a;color:#ffe08a}
+  .fn-rule.on{border-style:solid;border-color:#ffe08a;color:#ffe08a;background:rgba(255,224,138,.08)}
+  .fmet{display:grid;grid-template-columns:1fr 1fr;gap:clamp(6px,.8vw,12px)}
+  .fmet div{border:1px solid var(--line);border-radius:12px;background:#232733;padding:clamp(7px,1.1vh,13px) clamp(9px,.9vw,14px);display:flex;flex-direction:column;gap:2px}
+  .fmet small{font-size:clamp(9px,.8vw,12.5px);color:#a6aebf;font-weight:600;line-height:1.3}
+  .fmet b{font-size:clamp(16px,1.7vw,28px);font-weight:800;color:var(--vc);line-height:1.1}
+  .fextra{border:1px dashed #3b4152;border-radius:12px;padding:clamp(8px,1.2vh,14px);display:flex;flex-direction:column;gap:8px;font-size:clamp(10.5px,.95vw,15px);color:#c9cfdd;line-height:1.45}
+  .fextra .api-row{margin-top:2px}
+
+  /* DOM — árvore + página */
+  .dm-tree{
+    background:var(--dark);border:1px solid #26262a;border-radius:14px;padding:clamp(8px,1.2vh,14px) clamp(10px,1vw,16px);
+    font-family:"Cascadia Code",Consolas,monospace;font-size:clamp(10px,.92vw,14.5px);line-height:26px
+  }
+  .dm-kids{margin-left:clamp(14px,1.5vw,24px)}
+  .dm-item{position:relative;padding-left:clamp(10px,1vw,16px)}
+  .dm-item::before{content:"";position:absolute;left:0;top:0;bottom:0;border-left:2px solid #3b4152}
+  .dm-kids > .dm-item:last-child::before{bottom:auto;height:13px}
+  .dm-item .dm-row::before{content:"";position:absolute;left:0;top:13px;width:clamp(8px,.9vw,13px);border-top:2px solid #3b4152}
+  .dm-tree > .dm-item{padding-left:0}
+  .dm-tree > .dm-item::before,.dm-tree > .dm-item > .dm-row::before{display:none}
+  .dm-row{display:block;height:26px;white-space:nowrap}
+  .dm-node{
+    display:inline-block;line-height:1.5;padding:0 .55em;border-radius:7px;border:1.5px solid var(--nc,#94a3b8);
+    color:var(--nc,#94a3b8);background:transparent;transition:.2s
+  }
+  .dm-node i{font-style:normal;opacity:.75}
+  .dm-node[data-id]{cursor:pointer}
+  .dm-node[data-id]:hover{background:color-mix(in srgb,var(--nc) 18%,transparent)}
+  .dm-node.path{box-shadow:0 0 0 2px rgba(245,197,24,.45);color:#fde68a;border-color:#f5c518}
+  .dm-node.sel{background:#f5c518;border-color:#f5c518;color:#0d0f13;font-weight:800}
+  .dm-node.sel i{opacity:.8}
+  .dm-card{
+    margin:clamp(8px,1.1vw,14px);flex:1;min-height:0;display:flex;gap:clamp(8px,1vw,14px);align-items:stretch;
+    background:#1e2129;border:2px solid #2c303b;border-radius:14px;padding:clamp(8px,1vw,14px);transition:.3s
+  }
+  .dm-card > [data-dm]{cursor:pointer}
+  .dm-card [data-dm]{border-radius:8px;transition:.25s}
+  .dm-card [data-dm]:hover{outline:2px dashed rgba(245,197,24,.55);outline-offset:3px}
+  .dm-card .dm-sel{outline:3px dashed #f5c518!important;outline-offset:3px;box-shadow:0 0 20px rgba(245,197,24,.35)}
+  .dm-cover{flex:0 0 34%;display:grid;place-items:center;font-size:clamp(28px,3.4vw,54px);background:linear-gradient(160deg,#ff8a80,#e50914)}
+  .dm-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:clamp(5px,.9vh,10px)}
+  .dm-info h2{font-size:clamp(15px,1.7vw,28px);font-weight:800;line-height:1.1}
+  .dm-meta{display:flex;gap:8px;flex-wrap:wrap}
+  .dm-meta span{font-size:clamp(10px,.9vw,14px);font-weight:800;padding:.2em .7em;border-radius:99px;background:#2a2f3b;color:#dfe6f5}
+  .dm-info p{font-size:clamp(10px,.92vw,14.5px);color:var(--muted);line-height:1.45}
+  .dm-btn{align-self:flex-start;font:inherit;border:0;cursor:pointer;background:var(--red);color:#fff;font-weight:800;border-radius:99px;padding:.5em 1.2em;font-size:clamp(10px,.95vw,15px)}
+  .dm-hint{font-size:clamp(10px,.9vw,14px);color:var(--muted);line-height:1.45;padding:0 clamp(8px,1.1vw,14px) clamp(8px,1.1vw,14px)}
+  .ln.dim{opacity:.35;background:none;box-shadow:none}
+
+  /* Array — gaveteiro vivo */
+  .res{color:#9ae08a;font-weight:800}
+  .ar-btns{display:flex;gap:clamp(6px,.8vw,12px)}
+  .ar-btns .fn-rule{flex:1;padding:.55em .4em;font-size:clamp(10px,.9vw,14px);border-style:solid;border-color:#3b4152}
+  .ar-btns .fn-rule:disabled{opacity:.35;cursor:not-allowed}
+  .ar-btns .fn-rule:disabled:hover{border-color:#3b4152;color:#dfe6f5}
+  .ar-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:clamp(5px,.7vw,10px)}
+  .ar-cell{display:flex;flex-direction:column;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--card);cursor:pointer;transition:.2s;min-height:clamp(120px,24vh,210px)}
+  .ar-cell .ix{background:var(--dark);color:#8b93a6;font-family:"Cascadia Code",Consolas,monospace;font-size:clamp(10px,.9vw,14px);font-weight:800;padding:.35em;text-align:center}
+  .ar-cell .bx{flex:1;display:grid;place-items:center;text-align:center;padding:6px 4px;font-size:clamp(10px,1vw,16px);font-weight:800;color:#0d0f13;line-height:1.2;background:var(--c)}
+  .ar-cell.next{border-style:dashed;border-color:#4a5266;cursor:default}
+  .ar-cell.next .bx{background:transparent;color:#6b7385;font-weight:600}
+  .ar-cell.empty{opacity:.35;cursor:default;border-style:dashed}
+  .ar-cell.empty .bx{background:transparent}
+  .ar-cell.pick{border-color:#f5c518;box-shadow:0 0 0 3px rgba(245,197,24,.45),0 0 22px rgba(245,197,24,.35);transform:translateY(-4px)}
+  .ar-cell.pick .ix{background:#f5c518;color:#0d0f13}
+  .ar-cell.new .bx{animation:arpop .45s ease}
+  @keyframes arpop{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.12)}100%{transform:none;opacity:1}}
+  .ar-ruler{height:clamp(14px,2vh,20px);border:2px solid #f5c518;border-top:0;border-radius:0 0 10px 10px;margin-top:2px;position:relative;transition:.3s}
+  .ar-ruler span{position:absolute;left:50%;top:100%;transform:translate(-50%,6px);white-space:nowrap;font-family:"Cascadia Code",Consolas,monospace;font-weight:800;color:#f5c518;font-size:clamp(11px,1.05vw,17px)}
+  .ar-rwrap{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:clamp(5px,.7vw,10px);margin-bottom:clamp(18px,3vh,30px)}
+
+  .event-demo{flex:1;display:grid;place-items:center;gap:12px;align-content:center;min-height:0;text-align:center}
+  .evt-btn{
+    font-family:inherit;cursor:pointer;border:0;border-radius:999px;
+    padding:clamp(11px,1.5vh,18px) clamp(18px,2.2vw,34px);
+    font-size:clamp(13px,1.3vw,21px);font-weight:800;color:#fff;
+    background:var(--red);box-shadow:0 0 20px rgba(229,9,20,.6);transition:.18s;
+  }
+  .evt-btn:hover{transform:scale(1.05);background:var(--red-dark);box-shadow:0 0 34px rgba(229,9,20,.9)}
+  .evt-btn:active{transform:scale(.97)}
+  .evt-out{min-height:2.8em;display:grid;place-items:center;font-size:clamp(12px,1.1vw,18px);font-weight:700;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:.5em 1em;box-shadow:0 10px 22px -20px rgba(0,0,0,.95);max-width:100%}
+  .evt-out small{display:block;font-size:.7em;font-weight:700;color:#8b93a6;letter-spacing:.1em;text-transform:uppercase}
+  .pulse{animation:pop .45s ease}
+  @keyframes pop{0%{transform:scale(.96);opacity:.6}100%{transform:none;opacity:1}}
+
+  .final{justify-content:center;gap:clamp(12px,2vh,26px)}
+  .final h1{max-width:26ch}
+  .recap{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(8px,1.2vw,18px)}
+  .recap div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:clamp(10px,1.4vh,18px);border-top:5px solid var(--c)}
+  .recap h4{font-size:clamp(12px,1.1vw,19px);font-weight:800;margin-bottom:3px}
+  .recap p{font-size:clamp(10px,.92vw,15px);color:var(--muted);line-height:1.45}
+
+  .note{font-size:clamp(10px,.9vw,14px);color:var(--muted);display:flex;gap:.5em;align-items:flex-start;line-height:1.5}
+  .note b{color:var(--ink)}
+
+  .notes{
+    position:fixed;z-index:8;left:0;right:0;bottom:clamp(46px,6.4vh,66px);
+    max-height:40vh;overflow:auto;background:var(--dark);color:#e7e7ea;
+    padding:14px clamp(26px,4.6vw,76px) 18px;
+    border-top:3px solid var(--accent,var(--css));
+    box-shadow:0 -18px 40px -30px rgba(0,0,0,.9);
+    transform:translateY(calc(100% + 80px));transition:transform .25s ease;
+    font-size:clamp(12px,1.02vw,16px);line-height:1.55;
+  }
+  .notes.show{transform:none}
+  .notes h4{font-size:clamp(9px,.78vw,12px);letter-spacing:.16em;text-transform:uppercase;color:#ff8fa3;margin-bottom:6px;font-weight:800}
+  .notes p{max-width:110ch}
+  .notes b{color:#fff}
+
+  @media (max-width:900px){
+    .body{grid-template-columns:1fr;align-content:start;overflow:auto}
+    .flow{overflow:auto}
+    .flow-row,.flow-steps{min-width:720px}
+    .panel{min-height:260px}
+    .recap{grid-template-columns:1fr}
+  }
+  @media (max-height:620px){ .sub{display:none} }
+
+  @media print{
+    @page{size:landscape;margin:0}
+    body{overflow:visible;background:#15171c;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body::before{display:none}
+    nav,.progress,.notes{display:none!important}
+    .slide{position:relative;inset:auto;display:flex!important;height:100vh;page-break-after:always;break-after:page;animation:none}
+    .slide:last-child{page-break-after:auto}
+    .cover{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- ================= CAPA ================= -->
+  <section class="slide cover active" style="--accent:#ff4d57">
+    <span class="badge">🎬 CineMatch · HTML, CSS e JS</span>
+    <div class="logo-mark">Cine<span>Match</span></div>
+    <h1>Criando Aplicações Web <em>Consumo de APIs</em></h1>
+    <div class="strip">
+      <span class="chip"><span class="sw" style="background:#f97316"></span>HTML · estrutura</span>
+      <span class="chip"><span class="sw" style="background:#e50914"></span>CSS · estilo</span>
+      <span class="chip"><span class="sw" style="background:#f5c518"></span>JavaScript · lógica</span>
+    </div>
+  </section>
+
+  <!-- ================= 1 · TRÍADE ================= -->
+  <section class="slide" style="--accent:#ff4d57">
+    <div>
+      <div class="kicker">Slide 1 · A base de tudo</div>
+      <h1>A Tríade da Web</h1>
+      <p class="sub">O CineMatch é feito dessas três peças trabalhando juntas — e cada arquivo do projeto é uma delas.</p>
+    </div>
+
+    <div class="body">
+      <div class="col">
+        <div class="tri">
+          <article class="tri-card" data-layer="html" style="--c:#fb923c">
+            <span class="ico">💀</span>
+            <div><h3>HTML</h3><p>Estrutura e conteúdo — <b>o que existe</b></p></div>
+            <span class="tag">index.html</span>
+          </article>
+          <article class="tri-card" data-layer="css" style="--c:#ff4d57">
+            <span class="ico">🎨</span>
+            <div><h3>CSS</h3><p>Estilo e design — <b>como se parece</b></p></div>
+            <span class="tag">style.css</span>
+          </article>
+          <article class="tri-card" data-layer="js" style="--c:#f0b429">
+            <span class="ico">🧠</span>
+            <div><h3>JavaScript</h3><p>Comportamento e lógica — <b>o que faz</b></p></div>
+            <span class="tag">script.js</span>
+          </article>
+        </div>        
+      </div>
+
+      <div class="panel">
+        <div class="panel-label">O mesmo site, três camadas</div>
+        <div class="figure-wrap">
+          <div class="figure" id="fig">
+            <div class="fig-head"><div class="fig-skin"></div><span class="fig-skel"></span><span class="fig-brain">🧠</span></div>
+            <div class="fig-torso"><div class="fig-skin"></div><span class="fig-skel"></span></div>
+            <div class="fig-legs"><span><div class="fig-skin"></div><i class="fig-skel"></i></span><span><div class="fig-skin"></div><i class="fig-skel"></i></span></div>
+            <span class="fig-tag">seu site</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 2 · TAGS + ID ================= -->
+  <section class="slide" style="--accent:#fb923c">
+    <div>
+      <div class="kicker">Slide 2 · HTML</div>
+      <h1>As tags e o "RG" do elemento</h1>
+      <p class="sub">Cada tag cria um pedaço da página. E o <b>id</b> é o documento de identidade desse pedaço.</p>
+    </div>
+
+    <div class="body">
+      <div class="col">
+        <div class="item" style="--accent:#fb923c">          
+          <div><h3>&lt;tag&gt; cria o elemento</h3>
+            <p>Tudo que aparece na tela nasceu de uma tag: <code>&lt;button&gt;</code>, <code>&lt;img&gt;</code>, <code>&lt;h2&gt;</code>.</p></div>
+        </div>
+        <div class="item" style="--accent:#fb923c">
+          <div><h3>id="..." é o nome único</h3>
+            <p>Não pode existir outro igual. É por ele que o JavaScript encontra o elemento depois.</p></div>
+        </div>
+        <div class="code">
+          <div class="bar"><i></i><i></i><i></i><span>index.html</span></div>
+          <pre><span class="t">&lt;button</span> <span class="f">id</span>=<span class="s">"botao-sortear"</span><span class="t">&gt;</span>
+  🎬 Sortear Série/Filme
+<span class="t">&lt;/button&gt;</span></pre>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-label">O RG do botão</div>
+        <div style="flex:1;display:grid;place-items:center;gap:12px">
+          <div class="rg">
+            <div class="pic">🎬</div>
+            <div>
+              <div class="f">Nome único</div>
+              <div class="v">botao-sortear</div>
+              <div class="f" style="margin-top:6px">Tipo</div>
+              <div class="v" style="color:#dfe6f5">&lt;button&gt;</div>
+            </div>
+            <span class="stamp">ÚNICO</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3 · SELETORES ================= -->
+  <section class="slide" style="--accent:#ff4d57">
+    <div>
+      <div class="kicker">Slide 3 · CSS</div>
+      <h1>Como o CSS acha o elemento</h1>
+      <p class="sub">O CSS não adivinha: ele usa <b>seletores</b> para apontar exatamente quem vai receber o estilo. Clique em cada um e veja quem muda.</p>
+    </div>
+
+    <div class="body">
+      <div class="col">
+        <div class="sel-rows">
+          <div class="sel" data-sel="tag" style="--sc:#22c55e">
+            <code style="color:#22c55e">button</code>
+            <span class="what">pega a <b>tag</b> — vale para <b>todos</b> os <code>&lt;button&gt;</code></span>
+            <span class="n">TAG</span>
+          </div>
+          <div class="sel" data-sel="class" style="--sc:#ff4d57">
+            <code style="color:#ff4d57">.card</code>
+            <span class="what">o <b>ponto</b> pega a <code>class="card"</code> — vale para <b>vários</b></span>
+            <span class="n">CLASSE</span>
+          </div>
+          <div class="sel" data-sel="id" style="--sc:#c084fc">
+            <code style="color:#c084fc">#capa</code>
+            <span class="what">o <b>hashtag</b> pega o <code>id="capa"</code> — só <b>um</b></span>
+            <span class="n">ID</span>
+          </div>
+        </div>
+        <div class="code">
+          <div class="bar"><i></i><i></i><i></i><span>style.css</span></div>
+          <pre><span class="rule" data-sel="tag" style="--rc:#22c55e"><span class="p">button</span> { <span class="f">background-color</span>: <span class="s">#22c55e</span>; }</span><span class="rule" data-sel="class" style="--rc:#ff4d57"><span class="p">.card</span> { <span class="f">background-color</span>: <span class="s">#ff4d57</span>; }</span><span class="rule" data-sel="id" style="--rc:#c084fc"><span class="p">#capa</span> { <span class="f">background-color</span>: <span class="s">#c084fc</span>; }</span></pre>
+        </div>
+      </div>
+
+      <div class="panel mp" id="mp" data-sel="tag">
+        <div class="panel-label">O mesmo CSS, no site</div>
+        <div class="mp-tabs">
+          <button type="button" class="mp-tab" data-sel="tag" style="--tc:#22c55e">TAG<small>button</small></button>
+          <button type="button" class="mp-tab" data-sel="class" style="--tc:#ff4d57">CLASSE<small>.card</small></button>
+          <button type="button" class="mp-tab" data-sel="id" style="--tc:#c084fc">ID<small>#capa</small></button>
+        </div>
+        <div class="mp-window">
+          <div class="mp-bar"><i></i><i></i><i></i><span>seu-site.com</span></div>
+          <div class="mp-page">
+            <button type="button" tabindex="-1">&lt;button&gt;<small>sem class nem id</small></button>
+            <button type="button" tabindex="-1" class="card">&lt;button&gt;<small>class="card"</small></button>
+            <button type="button" tabindex="-1" id="capa">&lt;button&gt;<small>id="capa"</small></button>
+            <div class="card">&lt;div&gt;<small>class="card"</small></div>
+            <div class="card">&lt;div&gt;<small>class="card"</small></div>
+            <div>&lt;div&gt;<small>sem class nem id</small></div>
+          </div>
+        </div>
+        <div class="mp-status"><span class="cnt" id="mpCount">3</span><span id="mpText"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 4 · FLEXBOX ================= -->
+  <section class="slide" style="--accent:#ff4d57">
+    <div>
+      <div class="kicker">Slide 4 · CSS</div>
+      <h1>Flexbox: alinhar sem sofrimento</h1>
+      <p class="sub">Uma linha de código liga o "modo de organização automática" e as caixas se ajeitam sozinhas.</p>
+    </div>
+
+    <div class="body">
+      <div class="col">
+        <div class="item" style="--accent:#ff4d57">
+          <div><h3>Centralizar o card na tela</h3><p><code>body</code> com <code>display: flex</code> + <code>justify-content: center</code> + <code>align-items: center</code>.</p></div>
+        </div>
+        <div class="item" style="--accent:#ff4d57">
+          <div><h3>Imagem ao lado do texto</h3><p>O <code>.card</code> também é flex: capa e informações ficam <b>lado a lado</b>.</p></div>
+        </div>
+        <div class="item" style="--accent:#ff4d57">
+          <div><h3>No celular, um embaixo do outro</h3><p><code>flex-direction: column</code> dentro do <code>@media</code> — a imagem vai para cima.</p></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-label">Teste ao vivo</div>
+        <div class="demo">
+          <div class="flexbox" id="flexbox">
+            <div class="bx">1</div><div class="bx">2</div><div class="bx">3</div>
+          </div>
+        </div>
+        <div class="ctrls">
+          <button class="ctrl on" data-dir="row">flex-direction: row</button>
+          <button class="ctrl" data-dir="column">column</button>
+          <button class="ctrl on" data-just="center">justify: center</button>
+          <button class="ctrl" data-just="space-between">space-between</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 5 · HOVER ================= -->
+  <section class="slide" style="--accent:#ff4d57">
+    <div>
+      <div class="kicker">Slide 5 · CSS</div>
+      <h1>Interatividade: :hover</h1>
+      <p class="sub">O CSS também percebe o mouse. <b>:hover</b> responde à pergunta: "o que acontece quando o ponteiro passa por cima?"</p>
+    </div>
+
+    <div class="body">
+      <div class="col">
+        <div class="item" style="--accent:#ff4d57">
+          <div><h3>:hover</h3><p>Estilo enquanto o mouse está sobre o elemento. É o que faz o botão brilhar.</p></div>
+        </div>
+        <div class="item" style="--accent:#ff4d57">
+          <div><h3>:active</h3><p>Enquanto o botão está sendo <b>clicado e segurado</b>. Dá a sensação de "afundar".</p></div>
+        </div>
+        <div class="item" style="--accent:#ff4d57">
+          <div><h3>transform</h3><p><code>scale(1.07)</code> cresce · <code>scale(0.97)</code> encolhe. O <code>transition</code> deixa suave.</p></div>
+        </div>
+        <div class="code">
+          <div class="bar"><i></i><i></i><i></i><span>style.css</span></div>
+          <pre><span class="p">.botao:hover</span> {
+  <span class="f">transform</span>: <span class="n">scale</span>(<span class="n">1.07</span>);
+  <span class="f">box-shadow</span>: <span class="n">0 0 35px</span> <span class="s">rgba(229,9,20,.9)</span>;
+}</pre>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-label">Passe o mouse</div>
+        <div class="hover-stage">
+          <button class="neon">SORTEAR SÉRIE</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 6 · CONST vs LET vs VAR ================= -->
+  <section class="slide" style="--accent:#f0b429">
+    <div>
+      <div class="kicker">Slide 6 · JavaScript</div>
+      <h1>const, let ou var?</h1>
+      <p class="sub">Guardar dados é usar caixas com etiqueta. Clique em cada palavra: o mesmo código roda <b>de verdade</b> e mostra a diferença.</p>
+    </div>
+
+    <div class="body" style="align-items:start">
+      <div class="col">
+        <div class="vt-tabs">
+          <button type="button" class="vt" data-v="const" style="--tc:#94a3b8">const<small>caixa selada · não troca</small></button>
+          <button type="button" class="vt" data-v="let" style="--tc:#f0b429">let<small>caixa aberta · pode trocar</small></button>
+          <button type="button" class="vt" data-v="var" style="--tc:#ff4d57">var<small>jeito antigo · vaza</small></button>
+        </div>
+        <div class="code">
+          <div class="bar"><i></i><i></i><i></i><span>script.js</span></div>
+          <pre id="vCode"></pre>
+        </div>
+      </div>
+
+      <div class="panel vp" id="vp" data-v="const">
+        <div class="panel-label">Console · resultado real</div>
+        <div class="vcon" id="vOut"></div>
+        <div class="vverdict" id="vVerdict"></div>
+        <table class="vtable">
+          <thead><tr><th></th><th data-c="const">const</th><th data-c="let">let</th><th data-c="var">var</th></tr></thead>
+          <tbody>
+            <tr><td>Trocar o valor depois?</td><td data-c="const">não</td><td data-c="let">sim</td><td data-c="var">sim</td></tr>
+            <tr><td>Fica preso ao <code style="background:none;border:0;padding:0;color:inherit">{ }</code> onde nasceu?</td><td data-c="const">sim</td><td data-c="let">sim</td><td data-c="var">não, vaza</td></tr>
+            <tr><td>Devo usar?</td><td data-c="const">sempre que der</td><td data-c="let">se precisar trocar</td><td data-c="var">evitar</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 7 · FUNÇÕES ================= -->
+  <section class="slide" style="--accent:#f0b429">
+    <div>
+      <div class="kicker">Slide 7 · JavaScript</div>
+      <h1>O que é uma função?</h1>
+      <p class="sub">Um passo a passo com nome: escreva <b>uma vez</b> e <b>chame</b> quantas vezes quiser. Exemplo: quem pode assistir a uma série 16+?</p>
+    </div>
+
+    <div class="body" style="align-items:start">
+      <div class="col">
+        <div class="vt-tabs">
+          <button type="button" class="vt ft" data-f="sem" style="--tc:#ff4d57">Sem função<small>copiando o código</small></button>
+          <button type="button" class="vt ft" data-f="com" style="--tc:#22c55e">Com função<small>escrevo 1 vez, chamo várias</small></button>
+        </div>
+        <div class="code">
+          <div class="bar"><i></i><i></i><i></i><span>script.js</span></div>
+          <pre id="fnCode"></pre>
+        </div>
+        <button type="button" class="fn-rule" id="fnRule"></button>
+      </div>
+
+      <div class="panel fp" id="fp" data-f="sem">
+        <div class="panel-label">Console · resultado real</div>
+        <div class="vcon" id="fnOut"></div>
+        <div class="vverdict" id="fnVerdict"></div>
+        <div class="fmet">
+          <div><small>Verificar mais 1 pessoa custa</small><b id="fnM1"></b></div>
+          <div><small id="fnM2l"></small><b id="fnM2"></b></div>
+        </div>
+        <div class="fextra" id="fnExtra"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 8 · DOM ================= -->
+  <section class="slide" style="--accent:#f0b429">
+    <div>
+      <div class="kicker">Slide 8 · JavaScript</div>
+      <h1>O DOM: a árvore da página</h1>
+      <p class="sub">O navegador transforma o HTML em uma <b>árvore</b>. O JavaScript acha um galho pelo <b>id</b> e muda a página. Clique!</p>
+    </div>
+
+    <div class="body" style="align-items:start">
+      <div class="col">
+        <div class="dm-tree" id="dmTree">
+          <div class="dm-item"><div class="dm-row"><span class="dm-node">&lt;body&gt;</span></div>
+            <div class="dm-kids">
+              <div class="dm-item"><div class="dm-row"><span class="dm-node" data-id="card" style="--nc:#fb923c">&lt;div&gt; <i>id="card"</i></span></div>
+                <div class="dm-kids">
+                  <div class="dm-item"><div class="dm-row"><span class="dm-node" data-id="capa" style="--nc:#fb923c">&lt;img&gt; <i>id="capa"</i></span></div></div>
+                  <div class="dm-item"><div class="dm-row"><span class="dm-node">&lt;div&gt; <i>info</i></span></div>
+                    <div class="dm-kids">
+                      <div class="dm-item"><div class="dm-row"><span class="dm-node" data-id="titulo" style="--nc:#fb923c">&lt;h2&gt; <i>id="titulo"</i></span></div></div>
+                      <div class="dm-item"><div class="dm-row"><span class="dm-node" data-id="nota" style="--nc:#fb923c">&lt;span&gt; <i>id="nota"</i></span></div></div>
+                      <div class="dm-item"><div class="dm-row"><span class="dm-node" data-id="genero" style="--nc:#fb923c">&lt;span&gt; <i>id="genero"</i></span></div></div>
+                      <div class="dm-item"><div class="dm-row"><span class="dm-node" data-id="sinopse" style="--nc:#fb923c">&lt;p&gt; <i>id="sinopse"</i></span></div></div>
+                      <div class="dm-item"><div class="dm-row"><span class="dm-node" data-id="botao-sortear" style="--nc:#fb923c">&lt;button&gt; <i>id="botao-sortear"</i></span></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="code">
+          <div class="bar"><i></i><i></i><i></i><span>script.js</span></div>
+          <pre id="dmCode"></pre>
+        </div>
+        <button type="button" class="fn-rule" id="dmBtn"></button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-label">A página que o usuário vê</div>
+        <div class="mp-window" style="flex:1">
+          <div class="mp-bar"><i></i><i></i><i></i><span>cinematch.com</span></div>
+          <div class="dm-card" data-dm="card" id="dm-card">
+            <div class="dm-cover" data-dm="capa" id="dm-capa">🎬</div>
+            <div class="dm-info">
+              <h2 data-dm="titulo" id="dm-titulo">Dark</h2>
+              <div class="dm-meta"><span data-dm="nota" id="dm-nota">⭐ 8.8</span><span data-dm="genero" id="dm-genero">Drama</span></div>
+              <p data-dm="sinopse" id="dm-sinopse">Uma cidade pequena guarda um segredo sobre o tempo.</p>
+              <button type="button" tabindex="-1" class="dm-btn" data-dm="botao-sortear" id="dm-botao-sortear">Sortear</button>
+            </div>
+          </div>
+          <div class="dm-hint">Cada pedaço da página é um <b>galho</b> da árvore. Mudou o galho com JS, mudou a página.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 9 · ARRAY ================= -->
+  <section class="slide" style="--accent:#f0b429">
+    <div>
+      <div class="kicker">Slide 9 · JavaScript</div>
+      <h1>O que é um Array?</h1>
+      <p class="sub">Uma lista com várias gavetas numeradas dentro de <b>uma única variável</b>. A primeira gaveta é a <b>0</b>.</p>
+    </div>
+
+    <div class="body" style="align-items:start">
+      <div class="col">
+        <div class="code">
+          <div class="bar"><i></i><i></i><i></i><span>script.js</span></div>
+          <pre id="arCode" style="min-height:15.5em"></pre>
+        </div>
+        <div class="ar-btns">
+          <button type="button" class="fn-rule" id="arPush"></button>
+          <button type="button" class="fn-rule" id="arPop">pop() · tira a última</button>
+          <button type="button" class="fn-rule" id="arRand">🎲 sortear</button>
+        </div>
+        <p class="note">Clique em uma gaveta para ler <code>lista[posição]</code>. É assim que o CineMatch sorteia uma série.</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-label">A lista na memória</div>
+        <div class="ar-grid" id="arGrid"></div>
+        <div class="ar-rwrap"><div class="ar-ruler" id="arRuler"><span id="arRulerT"></span></div></div>
+        <div class="fmet" style="--vc:#f0b429">
+          <div><small>lista.length (quantos itens)</small><b id="arLen"></b></div>
+          <div><small>última posição = length − 1</small><b id="arLast"></b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 10 · API ================= -->
+  <section class="slide" style="--accent:#ff4d57">
+    <div>
+      <div class="kicker">Slide 10 · JavaScript</div>
+      <h1>O que é uma API?</h1>
+      <p class="sub">É o <b>mensageiro</b> entre o seu celular (ou site) e o lugar onde os dados ficam guardados.</p>
+    </div>
+
+    <div class="body flow-body">
+      <div class="panel flow">
+        <div class="panel-label">Exemplo: o app do tempo</div>
+
+        <div class="flow-row">
+          <div class="fnode">
+            <span class="fi">📱</span>
+            <span class="fn">Cliente</span>
+            <span class="fd">o celular ou o site<br>que você está usando</span>
+            <div class="fscreen">
+              <small>São Paulo</small>
+              <span class="big">☀️ 24°</span>
+              <span class="cond">Ensolarado</span>
+            </div>
+          </div>
+
+          <div class="flink">
+            <div class="fl req">
+              <div class="t"><span class="fb">1</span>Pedido</div>
+              <div class="ln"></div>
+            </div>
+            <div class="fl res">
+              <div class="ln"></div>
+              <div class="t"><span class="fb">4</span>Resposta</div>
+            </div>
+          </div>
+
+          <div class="fnode api">
+            <span class="fi">📨</span>
+            <span class="fn">API</span>
+            <span class="fd">o mensageiro<br>só leva e traz,<br>não guarda nada</span>
+          </div>
+
+          <div class="flink">
+            <div class="fl req">
+              <div class="t"><span class="fb">2</span>Busca</div>
+              <div class="ln"></div>
+            </div>
+            <div class="fl res">
+              <div class="ln"></div>
+              <div class="t"><span class="fb">3</span>Dados</div>
+            </div>
+          </div>
+
+          <div class="fnode">
+            <span class="fi">🗄️</span>
+            <span class="fn">Banco de dados</span>
+            <span class="fd">onde a informação<br>fica guardada</span>
+            <div class="fdb">
+              <div class="hit"><span>São Paulo</span><span>24° ☀️</span></div>
+              <div><span>Rio</span><span>31° 🌤️</span></div>
+              <div><span>Curitiba</span><span>16° ☁️</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-steps">
+          <div class="fstep" style="--c:#ff4d57"><span class="fb">1</span><span>Você abre o app e <b>pede</b> o tempo de São Paulo.</span></div>
+          <div class="fstep" style="--c:#ff4d57"><span class="fb">2</span><span>A API <b>vai buscar</b> no banco de dados.</span></div>
+          <div class="fstep" style="--c:#4ade80"><span class="fb">3</span><span>O banco <b>entrega</b> os dados para a API.</span></div>
+          <div class="fstep" style="--c:#4ade80"><span class="fb">4</span><span>A API <b>devolve</b> a resposta ao celular.</span></div>
+          <div class="fstep" style="--c:#f5c518"><span class="fb">5</span><span>O celular <b>mostra</b> na tela: 24° Ensolarado.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 11 · ASSÍNCRONAS ================= -->
+  <section class="slide" style="--accent:#ff4d57">
+    <div>
+      <div class="kicker">Slide 11 · JavaScript</div>
+      <h1>Funções assíncronas</h1>
+      <p class="sub">Buscar na internet demora. O <b>async/await</b> ensina o código a esperar sem travar a página.</p>
+    </div>
+
+    <div class="body">
+      <div class="col">
+        <div class="item" style="--accent:#ff4d57">
+          <div><h3>Nem tudo é na hora</h3><p>O pedido à API leva um tempo. O JavaScript não pode congelar esperando.</p></div>
+        </div>
+        <div class="item" style="--accent:#ff4d57">
+          <div><h3>async marca a função</h3><p>Diz que ela pode demorar e vai devolver uma <b>promessa</b> de resposta.</p></div>
+        </div>
+        <div class="item" style="--accent:#ff4d57">
+          <div><h3>await espera só ali</h3><p>A função pausa até a resposta chegar — o resto da página continua vivo.</p></div>
+        </div>
+        <div class="code">
+          <div class="bar"><i></i><i></i><i></i><span>script.js</span></div>
+          <pre><span class="k">async function</span> <span class="f">buscarSeries</span>() {
+  <span class="k">const</span> <span class="f">resposta</span> = <span class="k">await</span> <span class="f">fetch</span>(<span class="f">URL_API</span>);
+  <span class="k">return</span> <span class="k">await</span> <span class="f">resposta</span>.<span class="f">json</span>();
+}</pre>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-label">Enquanto a resposta não chega</div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px">
+          <div class="item" style="--accent:#ff4d57">
+            <div><h3>1 · Alguém clica</h3><p>A função assíncrona começa a rodar.</p></div>
+          </div>
+          <div class="item" style="--accent:#ff4d57">
+            <div><h3>2 · O await segura a função</h3><p>Ela espera o pedido. A página continua respondendo.</p></div>
+          </div>
+          <div class="item" style="--accent:#22c55e">
+            <div><h3>3 · A resposta chega</h3><p>A função continua de onde parou, já com os dados.</p></div>
+          </div>
+          <p class="note">Sem o <code>await</code>, o código segue antes dos dados chegarem.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 12 · FETCH ================= -->
+  <section class="slide" style="--accent:#f0b429">
+    <div>
+      <div class="kicker">Slide 12 · JavaScript</div>
+      <h1>Pedindo com fetch</h1>
+      <p class="sub"><b>fetch</b> é o pedido. <b>await</b> é a espera. <b>.json()</b> abre a embalagem com os dados.</p>
+    </div>
+
+    <div class="body">
+      <div class="col">
+        <div class="item" style="--accent:#f0b429">
+          <div><h3>fetch(URL_API)</h3><p>Faz o pedido para a API. Ele não traz tudo na hora — devolve uma <b>promessa</b> de que vai trazer.</p></div>
+        </div>
+        <div class="item" style="--accent:#f0b429">
+          <div><h3>await</h3><p>"Espere a resposta chegar antes de seguir." Sem ele, o código continua sem os dados.</p></div>
+        </div>
+        <div class="item" style="--accent:#f0b429">
+          <div><h3>resposta.json()</h3><p>Abre a embalagem e transforma o texto em uma lista que o JS entende.</p></div>
+        </div>
+        <div class="item" style="--accent:#f0b429">
+          <div><h3>return dados</h3><p>Entrega a lista pronta para o <code>sortear()</code> usar.</p></div>
+        </div>
+        <div class="code">
+          <div class="bar"><i></i><i></i><i></i><span>script.js</span></div>
+          <pre><span class="k">async function</span> <span class="f">buscarSeries</span>() {
+  <span class="k">const</span> <span class="f">resposta</span> = <span class="k">await</span> <span class="f">fetch</span>(<span class="f">URL_API</span>);
+  <span class="k">const</span> <span class="f">dados</span> = <span class="k">await</span> <span class="f">resposta</span>.<span class="f">json</span>();
+  <span class="k">return</span> <span class="f">dados</span>;
+}</pre>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-label">Passo a passo</div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px">
+          <div class="item" style="--accent:#ff4d57">
+            <span class="ico">1️⃣</span>
+            <div><h3>Pede</h3><p><code>fetch(URL_API)</code> → o garçom vai até a cozinha.</p></div>
+          </div>
+          <div class="item" style="--accent:#ff4d57">
+            <span class="ico">2️⃣</span>
+            <div><h3>Espera</h3><p><code>await</code> → o código para ali até o prato chegar.</p></div>
+          </div>
+          <div class="item" style="--accent:#ff4d57">
+            <span class="ico">3️⃣</span>
+            <div><h3>Guarda</h3><p><code>dados</code> → a lista de séries pronta para sortear.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 13 · EVENTO ================= -->
+  <section class="slide" style="--accent:#f0b429">
+    <div>
+      <div class="kicker">Slide 13 · JavaScript</div>
+      <h1>Escutando ações</h1>
+      <p class="sub">O botão não faz nada sozinho. O <b>addEventListener</b> fica vigiando: quando alguém clica, a função dispara.</p>
+    </div>
+
+    <div class="body">
+      <div class="col">
+        <div class="item" style="--accent:#f0b429">
+          <div><h3>addEventListener("click", funcao)</h3><p>Coloca um "sensor" no elemento. O 1º argumento é o evento; o 2º, o que fazer.</p></div>
+        </div>
+        <div class="item" style="--accent:#f0b429">
+          <div><h3>A função só roda na hora certa</h3><p>Você não chama a função com <code>()</code> — você entrega ela para o sensor guardar.</p></div>
+        </div>
+        <div class="code">
+          <div class="bar"><i></i><i></i><i></i><span>script.js</span></div>
+          <pre><span class="f">botao</span>.<span class="f">addEventListener</span>(<span class="s">"click"</span>, <span class="f">aoClicar</span>);</pre>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-label">Teste o sensor</div>
+        <div class="event-demo">
+          <button class="evt-btn" id="demo-sortear">Sortear Série/Filme</button>
+          <div class="evt-out" id="demo-out">
+            <span><small>resultado</small>clique no botão acima</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<nav>
+  <button class="navbtn" id="prev" aria-label="Anterior">←</button>
+  <button class="navbtn" id="next" aria-label="Próximo">→</button>
+  <div class="dots" id="dots"></div>
+  <span class="counter" id="counter">1 / 14</span>
+</nav>
+<div class="progress" id="progress"></div>
+
+<aside class="notes" id="notes" aria-live="polite">
+  <h4>Notas do apresentador · tecla N para esconder</h4>
+  <p id="notesText"></p>
+</aside>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsBox = document.getElementById('dots');
+  const counter = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+  const notes = document.getElementById('notes');
+  const notesText = document.getElementById('notesText');
+  let i = 0;
+
+  const NOTES = [
+    'Abertura (2 min). Mostre o CineMatch final funcionando e pergunte: "como ele sabe essas séries?". Depois a metáfora do corpo: esqueleto = HTML, roupa = CSS, cérebro = JS. Não explique código ainda — só crie o mapa mental.',
+    'Explique com o corpo: "se eu tirar o esqueleto, o corpo cai — sem HTML não há o que mostrar". "A roupa não muda o corpo, só a aparência — CSS não cria conteúdo". "O cérebro decide o que fazer — JS reage ao clique". Pergunte qual dos três parece mais difícil (normalmente CSS).',
+    'Mostre o botão na tela: "isso é uma tag <button>". A tag é o molde; o texto dentro é o conteúdo. O id é o RG: ninguém pode ter o mesmo. Peça para imaginarem dois alunos com o mesmo nome na chamada — quem responde? É o problema do id repetido.',
+    'Clique em cada seletor e deixe a turma PREVER antes: "quem vai mudar?". TAG (button): muda todo mundo que é <button>, não importa se tem class ou id. CLASSE (.card): muda quem tem class="card", mesmo sendo tags diferentes (button e div). ID (#capa): muda só um, porque o id é único. Compare com a chamada da sala: tag = "todo mundo", .card = "o grupo", #capa = "o aluno João" (só existe um). O # é mais forte que o ponto, e o ponto mais forte que a tag.',
+    'DICA PARA O PROGRAMADOR: ao digitar o CSS, o body com flex + justify/align center é o que centraliza o card. O .card com display:flex põe capa e texto lado a lado. O @media (max-width:600px) muda para column no celular — vale abrir o DevTools e arrastar a janela para mostrar ao vivo.',
+    'Peça para passarem o mouse no botão do deck. Pergunte: "o CSS mudou o HTML ou só a aparência?" (só a aparência). Mostre que :hover não é clique. Depois segure o botão para ver o :active. No projeto, o :disabled deixa o botão apagado enquanto carrega.',
+    'Clique em const, let e var NESSA ORDEM e peça para a turma prever o resultado antes de a saída aparecer — o código roda de verdade no navegador. const: tentar trocar dá erro (caixa selada). let: troca, mas fora do bloco { } a variável não existe (erro). var: troca e VAZA do bloco (imprime "vazou!"): por isso evitamos. Pergunte qual usar para a URL (const) e qual para a lista que ganha itens (let). DICA: se alguém perguntar "posso dar push em um const?", responda que o cadeado é na variável, não no conteúdo — não aprofunde. A mensagem de erro varia um pouco entre navegadores.',
+    'Comece em SEM FUNÇÃO e pergunte: "o que está se repetindo aqui?" (o mesmo if, 3 vezes). Depois clique em COM FUNÇÃO: a regra aparece uma vez só e as chamadas verificar(12), verificar(17)... ficam de uma linha. Explique a máquina: parâmetro (idade) entra, o passo a passo acontece dentro das chaves, o return devolve a resposta. Agora clique em "A regra mudou: 18+" nas DUAS abas e conte as alterações amarelas: 3 lugares sem função, 1 com função. Pergunte: "se eu só escrever verificar, acontece algo?" (não — falta o () para chamar). Mostre no console: function dobro(n){ return n*2; } e depois dobro(5). DICA: se perguntarem sobre arrow function, diga que é outro jeito de escrever a mesma coisa — não aprofunde.',
+    'Analogia: o HTML é um prédio e o JS está do lado de fora; o DOM é a planta (a árvore) que o JS consulta. Mostre a árvore à esquerda e a página à direita: clique em um galho e o mesmo elemento acende nos dois lados. Os galhos em amarelo-claro são o CAMINHO até o elemento (body → div → div → h2). Depois clique em "Rodar a 2ª linha": o JS mudou o galho e a página mudou na hora. Faça com 3 elementos (título, nota, botão). Pergunte: "o que acontece se eu errar o id?" (getElementById devolve null e quebra o código). DICA: no console, digite document.getElementById("titulo") e mostre o elemento aparecendo.',
+    'Gaveteiro da sala: cada gaveta tem número, começando do ZERO. Clique nas gavetas e mostre que o código à esquerda acompanha: lista[0], lista[1]... Aperte push e a lista cresce (length sobe); aperte pop e ela encolhe. Pergunte ANTES de clicar: "com 3 séries, qual é a posição da última?" (2 — por isso o painel mostra length − 1). Depois clique em sortear: o número aleatório vira a posição, e é exatamente isso que o CineMatch faz para escolher uma série. DICA PARA O PROGRAMADOR: se sobrar tempo, mostre Math.floor(Math.random() * lista.length) no console, clicando várias vezes para ver o número mudar.',
+    'SLIDE SÓ DE API — vá devagar, apontando o desenho da esquerda para a direita e voltando. Comece perguntando: "quem abriu o app do tempo hoje?". Passo 1: o celular (cliente) PEDE o tempo de São Paulo. Passo 2: a API leva o pedido até o banco de dados, onde a informação fica guardada. Passo 3: o banco entrega os dados para a API. Passo 4: a API devolve a resposta ao celular. Passo 5: o celular mostra 24° Ensolarado na tela. Reforce: a API só leva e traz, ela não guarda os dados. Quando chegarmos ao código, o CineMatch faz a mesma coisa, só que pedindo séries. ABRA https://api.tvmaze.com/shows NO NAVEGADOR e mostre o JSON na tela: "olha, são os dados das séries". Se a rede da escola bloquear a API, tenha um print salvo. Deixe claro: a API não é um site bonito, é uma fonte de dados.',
+    'Assíncrono = pedir uma pizza e não ficar parado na porta. async avisa que a função vai demorar; await é a pausa só dela até a resposta chegar, enquanto a página continua viva. Mostre no console: async function teste(){ const r = await fetch("https://api.tvmaze.com/shows"); console.log("chegou"); } e depois teste(). DICA: não abra Promises, then ou try/catch agora — só diga que são "o plano B" se a internet falhar.',
+    'Agora o "como" na prática. fetch = pedir; await = esperar; .json() = abrir a embalagem. DICA PARA O PROGRAMADOR: try/catch é avançado — se a turma travar, diga que é "o plano B se a internet falhar". Não abra o assunto de Promises.',
+    'Clique no botão do deck e mostre o sorteio. Pergunte "o que dispara a função?" (o clique). Reforce: passamos aoClicar SEM parênteses — com parênteses ela rodaria ao carregar a página. Esse é o erro clássico da aula. DICA: o setTimeout(...,300) existe só para a animação de carregando aparecer. FECHAMENTO: recapitule em 30 segundos (HTML = esqueleto, CSS = roupa, JS = cérebro), perguntando antes de responder, e passe para a prática: o aluno monitor digita e a turma acompanha. Se der erro, o Console (F12) mostra a linha. FICOU FORA DOS SLIDES (só mostre se perguntarem): try/catch, ?., .join(), .replace() e Math.floor(Math.random()).',
+  ];
+
+  slides.forEach((s, idx) => {
+    const b = document.createElement('button');
+    b.className = 'dot';
+    b.setAttribute('aria-label', 'Ir para o slide ' + (idx + 1));
+    b.addEventListener('click', () => go(idx));
+    dotsBox.appendChild(b);
+  });
+
+  function renderNotes(){ notesText.textContent = NOTES[i] || ''; }
+  function toggleNotes(force){
+    const open = force !== undefined ? force : !notes.classList.contains('show');
+    notes.classList.toggle('show', open);
+    document.getElementById('notesBtn').classList.toggle('on', open);
+    renderNotes();
+  }
+  document.getElementById('notesBtn').addEventListener('click', () => toggleNotes());
+
+  function go(n){
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    const accent = getComputedStyle(slides[i]).getPropertyValue('--accent').trim() || '#e50914';
+    document.documentElement.style.setProperty('--accent', accent);
+    Array.from(dotsBox.children).forEach((d, idx) => d.classList.toggle('on', idx === i));
+    counter.textContent = (i + 1) + ' / ' + slides.length;
+    progress.style.width = ((i + 1) / slides.length * 100) + '%';
+    history.replaceState(null, '', '#' + (i + 1));
+    renderNotes();
+  }
+
+  document.getElementById('next').addEventListener('click', () => go(i + 1));
+  document.getElementById('prev').addEventListener('click', () => go(i - 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight','ArrowDown','PageDown',' ','Enter'].includes(e.key)) { e.preventDefault(); go(i + 1); }
+    else if (['ArrowLeft','ArrowUp','PageUp','Backspace'].includes(e.key)) { e.preventDefault(); go(i - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+    else if (e.key.toLowerCase() === 'n') { e.preventDefault(); toggleNotes(); }
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+      else document.exitFullscreen?.();
+    }
+  });
+
+  let sx = null;
+  document.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', e => {
+    if (sx === null) return;
+    const dx = e.changedTouches[0].clientX - sx;
+    if (Math.abs(dx) > 60) go(i + (dx < 0 ? 1 : -1));
+    sx = null;
+  }, {passive:true});
+
+  const mp = document.getElementById('mp');
+  const MP = {
+    tag:   {n:3, txt:'Todo elemento <b>&lt;button&gt;</b> mudou — tendo class, id ou nada.'},
+    class: {n:3, txt:'Todo elemento com <b>class="card"</b> mudou — mesmo sendo tags diferentes (button e div).'},
+    id:    {n:1, txt:'Só <b>1</b> elemento mudou — o <b>id="capa"</b> é único na página.'}
+  };
+  function setSel(k){
+    mp.dataset.sel = k;
+    document.querySelectorAll('.mp-tab, .sel[data-sel], .rule[data-sel]').forEach(el => {
+      el.classList.toggle('on', el.dataset.sel === k);
+    });
+    document.getElementById('mpCount').textContent = MP[k].n;
+    document.getElementById('mpText').innerHTML = MP[k].txt + ' <span style="opacity:.7">(' + MP[k].n + ' de 6)</span>';
+  }
+  document.querySelectorAll('.mp-tab, .sel[data-sel]').forEach(el => {
+    el.addEventListener('click', () => { setSel(el.dataset.sel); el.blur(); });
+  });
+  setSel('tag');
+
+  const vp = document.getElementById('vp');
+  const VAR_DEMO = {
+    const: {
+      html:
+        '<span class="k">const</span> <span class="f">nota</span> = <span class="n">8</span>;\n' +
+        '<span class="ln bad"><span class="f">nota</span> = <span class="n">10</span>;  <span class="c">// tentando trocar</span></span>' +
+        '<span class="f">console</span>.<span class="f">log</span>(<span class="f">nota</span>);',
+      src: 'const nota = 8;\nnota = 10;\nconsole.log(nota);',
+      tag: 'Seguro',
+      txt: '<b>const é selado.</b> Tentar trocar o valor dá erro e o programa para. Por isso usamos const para o que <b>nunca muda</b>.'
+    },
+    let: {
+      html:
+        '<span class="k">let</span> <span class="f">nota</span> = <span class="n">8</span>;\n' +
+        '<span class="f">nota</span> = <span class="n">10</span>;  <span class="c">// trocar pode</span>\n' +
+        '<span class="f">console</span>.<span class="f">log</span>(<span class="f">nota</span>);\n\n' +
+        '<span class="k">if</span> (<span class="k">true</span>) {\n' +
+        '  <span class="k">let</span> <span class="f">segredo</span> = <span class="s">"só aqui"</span>;\n' +
+        '}\n' +
+        '<span class="ln bad"><span class="f">console</span>.<span class="f">log</span>(<span class="f">segredo</span>);  <span class="c">// fora do { }</span></span>',
+      src: 'let nota = 8;\nnota = 10;\nconsole.log(nota);\nif (true) {\n  let segredo = "só aqui";\n}\nconsole.log(segredo);',
+      tag: 'Seguro',
+      txt: '<b>let troca o valor</b>, mas fica preso ao bloco <code>{ }</code> onde nasceu. Fora dele não existe — o JavaScript avisa.'
+    },
+    var: {
+      html:
+        '<span class="k">var</span> <span class="f">nota</span> = <span class="n">8</span>;\n' +
+        '<span class="f">nota</span> = <span class="n">10</span>;  <span class="c">// trocar pode</span>\n' +
+        '<span class="f">console</span>.<span class="f">log</span>(<span class="f">nota</span>);\n\n' +
+        '<span class="k">if</span> (<span class="k">true</span>) {\n' +
+        '  <span class="k">var</span> <span class="f">segredo</span> = <span class="s">"vazou!"</span>;\n' +
+        '}\n' +
+        '<span class="ln warn"><span class="f">console</span>.<span class="f">log</span>(<span class="f">segredo</span>);  <span class="c">// fora do { }</span></span>',
+      src: 'var nota = 8;\nnota = 10;\nconsole.log(nota);\nif (true) {\n  var segredo = "vazou!";\n}\nconsole.log(segredo);',
+      tag: 'Evite',
+      txt: '<b>var também troca</b>, mas <b>vaza</b> para fora do bloco: a variável aparece onde não devia, e isso causa bugs difíceis de achar.'
+    }
+  };
+  function runDemo(src){
+    const out = [];
+    const fake = { log: (...a) => out.push({ k:'log', m:a.join(' ') }) };
+    try { new Function('console', src)(fake); }
+    catch (e) { out.push({ k:'err', m:e.name + ': ' + e.message }); }
+    return out;
+  }
+  function setVar(k){
+    const d = VAR_DEMO[k];
+    vp.dataset.v = k;
+    document.querySelectorAll('.vt').forEach(b => b.classList.toggle('on', b.dataset.v === k));
+    document.getElementById('vCode').innerHTML = d.html;
+    const box = document.getElementById('vOut');
+    box.innerHTML = '<div class="h">saída</div>';
+    runDemo(d.src).forEach((l, n) => {
+      const row = document.createElement('span');
+      row.className = 'vline ' + l.k;
+      row.style.setProperty('--i', n);
+      row.textContent = l.m;
+      box.appendChild(row);
+    });
+    document.getElementById('vVerdict').innerHTML = '<span class="tagv">' + d.tag + '</span><span>' + d.txt + '</span>';
+  }
+  document.querySelectorAll('.vt').forEach(b => {
+    b.addEventListener('click', () => { setVar(b.dataset.v); b.blur(); });
+  });
+  setVar('const');
+
+  const fp = document.getElementById('fp');
+  const FN_PEOPLE = [['ana','Ana',12],['bia','Bia',17],['caio','Caio',20]];
+  let fnMode = 'sem', fnMin = 16;
+  function fnBuild(){
+    const hot = fnMin !== 16;
+    const M = '<span class="n' + (hot ? ' chg' : '') + '" data-min>' + fnMin + '</span>';
+    if (fnMode === 'sem') {
+      const html = FN_PEOPLE.map(([v,N,age]) =>
+        '<span class="k">let</span> <span class="f">' + v + '</span> = <span class="s">"bloqueado"</span>;\n' +
+        '<span class="ln warn"><span class="k">if</span> (<span class="n">' + age + '</span> &gt;= ' + M + ') { <span class="f">' + v + '</span> = <span class="s">"liberado"</span>; }</span>' +
+        '<span class="f">console</span>.<span class="f">log</span>(<span class="s">"' + N + ':"</span>, <span class="f">' + v + '</span>);'
+      ).join('\n\n');
+      const src = FN_PEOPLE.map(([v,N,age]) =>
+        'let ' + v + ' = "bloqueado";\nif (' + age + ' >= ' + fnMin + ') { ' + v + ' = "liberado"; }\nconsole.log("' + N + ':", ' + v + ');'
+      ).join('\n');
+      return { html, src };
+    }
+    const calls = FN_PEOPLE.map(([v,N,age]) =>
+      '<span class="f">console</span>.<span class="f">log</span>(<span class="s">"' + N + ':"</span>, <span class="f">verificar</span>(<span class="n">' + age + '</span>));'
+    ).join('\n');
+    const html =
+      '<span class="k">function</span> <span class="f">verificar</span>(<span class="f">idade</span>) {\n' +
+      '<span class="ln good">  <span class="k">if</span> (<span class="f">idade</span> &gt;= ' + M + ') <span class="k">return</span> <span class="s">"liberado"</span>;</span>' +
+      '  <span class="k">return</span> <span class="s">"bloqueado"</span>;\n}\n\n' + calls;
+    const src = 'function verificar(idade) {\n  if (idade >= ' + fnMin + ') return "liberado";\n  return "bloqueado";\n}\n' +
+      FN_PEOPLE.map(([v,N,age]) => 'console.log("' + N + ':", verificar(' + age + '));').join('\n');
+    return { html, src };
+  }
+  function setFn(){
+    const sem = fnMode === 'sem';
+    const d = fnBuild();
+    fp.dataset.f = fnMode;
+    document.querySelectorAll('.ft').forEach(b => b.classList.toggle('on', b.dataset.f === fnMode));
+    document.getElementById('fnCode').innerHTML = d.html;
+    const box = document.getElementById('fnOut');
+    box.innerHTML = '<div class="h">saída</div>';
+    runDemo(d.src).forEach((l, n) => {
+      const row = document.createElement('span');
+      row.className = 'vline ' + l.k;
+      row.style.setProperty('--i', n);
+      row.textContent = l.m;
+      box.appendChild(row);
+    });
+    const places = document.querySelectorAll('#fnCode [data-min]').length;
+    const hot = fnMin !== 16;
+    document.getElementById('fnVerdict').innerHTML = sem
+      ? '<span class="tagv">Repetido</span><span><b>O mesmo if foi copiado 3 vezes.</b> Funciona, mas se a regra mudar você precisa editar em todos os lugares — esquecer um vira bug.</span>'
+      : '<span class="tagv">Reaproveitado</span><span><b>A regra mora em um lugar só.</b> Para verificar mais gente é só <b>chamar</b> <code>verificar()</code> — sem copiar nada.</span>';
+    document.getElementById('fnM1').textContent = sem ? '+3 linhas' : '+1 linha';
+    document.getElementById('fnM2l').textContent = hot ? 'Para mudar a regra para ' + fnMin + '+ editei' : 'A regra (16+) está escrita em';
+    document.getElementById('fnM2').textContent = places + (places === 1 ? ' lugar' : ' lugares');
+    document.getElementById('fnExtra').innerHTML = sem
+      ? '<div><b>Copiar e colar</b> deixa o código longo e fácil de errar. Se a regra da idade mudar, você precisa lembrar de mexer em <b>3 lugares</b>.</div>'
+      : '<div>A função funciona como uma máquina: entra um valor, ela faz o trabalho e <b>devolve</b> a resposta.</div>' +
+        '<div class="api-row">' +
+        '<div class="actor"><span class="n">idade</span><span class="d">entra (parâmetro)</span></div><span class="arrow">→</span>' +
+        '<div class="actor" style="border-color:#4a3d22;background:#2b2519"><span class="n">verificar()</span><span class="d">faz o trabalho</span></div><span class="arrow">→</span>' +
+        '<div class="actor"><span class="n">"liberado"</span><span class="d">sai (return)</span></div></div>';
+    const rb = document.getElementById('fnRule');
+    rb.classList.toggle('on', hot);
+    rb.textContent = hot ? '↩ Voltar a regra para 16+' : 'A regra mudou: agora só 18+. Clique para ver o que muda';
+  }
+  document.querySelectorAll('.ft').forEach(b => {
+    b.addEventListener('click', () => { fnMode = b.dataset.f; setFn(); b.blur(); });
+  });
+  document.getElementById('fnRule').addEventListener('click', e => { fnMin = fnMin === 16 ? 18 : 16; setFn(); e.currentTarget.blur(); });
+  setFn();
+
+  const DMX = (() => {
+    const text = (v, val) => ({
+      v, line: '<span class="f">' + v + '</span>.<span class="f">textContent</span> = <span class="s">"' + val + '"</span>;',
+      on(e){ e.dataset.o = e.textContent; e.textContent = val; }, off(e){ e.textContent = e.dataset.o; }
+    });
+    return {
+      card:  { v:'card', line:'<span class="f">card</span>.<span class="f">style</span>.<span class="f">borderColor</span> = <span class="s">"gold"</span>;',
+               on(e){ e.style.borderColor = '#f5c518'; e.style.boxShadow = '0 0 28px rgba(245,197,24,.45)'; }, off(e){ e.style.borderColor = ''; e.style.boxShadow = ''; } },
+      capa:  { v:'capa', line:'<span class="f">capa</span>.<span class="f">style</span>.<span class="f">filter</span> = <span class="s">"grayscale(1)"</span>;',
+               on(e){ e.style.filter = 'grayscale(1)'; }, off(e){ e.style.filter = ''; } },
+      titulo:  text('titulo', 'Breaking Bad'),
+      nota:    text('nota', '⭐ 9.5'),
+      genero:  text('genero', 'Crime'),
+      sinopse: text('sinopse', 'Um professor de química entra para o crime.'),
+      'botao-sortear': Object.assign(text('botao', 'Sortear de novo'), {})
+    };
+  })();
+  let dmSel = 'titulo';
+  const dmDone = {};
+  function dmRender(){
+    const d = DMX[dmSel];
+    document.querySelectorAll('#dmTree .dm-node').forEach(n => n.classList.remove('sel','path'));
+    const node = document.querySelector('#dmTree [data-id="' + dmSel + '"]');
+    node.classList.add('sel');
+    let it = node.closest('.dm-item');
+    while ((it = it.parentElement.closest('.dm-item'))) it.querySelector(':scope > .dm-row .dm-node').classList.add('path');
+    document.querySelectorAll('.dm-card [data-dm]').forEach(e => e.classList.toggle('dm-sel', e.dataset.dm === dmSel));
+    const done = !!dmDone[dmSel];
+    document.getElementById('dmCode').innerHTML =
+      '<span class="k">const</span> <span class="f">' + d.v + '</span> = <span class="p">document</span>.<span class="f">getElementById</span>(<span class="s">"' + dmSel + '"</span>);\n' +
+      '<span class="ln ' + (done ? 'good' : 'dim') + '">' + d.line + '</span>';
+    const btn = document.getElementById('dmBtn');
+    btn.classList.toggle('on', done);
+    btn.textContent = done ? '↩ Desfazer a mudança' : '▶ Rodar a 2ª linha e mudar a página';
+  }
+  function dmSelect(id){ if (DMX[id]) { dmSel = id; dmRender(); } }
+  document.querySelectorAll('#dmTree [data-id]').forEach(n => n.addEventListener('click', () => dmSelect(n.dataset.id)));
+  document.querySelectorAll('.dm-card [data-dm]').forEach(e => e.addEventListener('click', ev => { ev.stopPropagation(); dmSelect(e.dataset.dm); e.blur(); }));
+  document.getElementById('dmBtn').addEventListener('click', ev => {
+    const el = document.getElementById('dm-' + dmSel);
+    if (dmDone[dmSel]) { DMX[dmSel].off(el); dmDone[dmSel] = false; } else { DMX[dmSel].on(el); dmDone[dmSel] = true; }
+    dmRender(); ev.currentTarget.blur();
+  });
+  dmRender();
+
+  const AR_NAMES = ['Dark','Lost','Friends','Breaking Bad','Stranger Things','The Office'];
+  const AR_COLORS = ['#ff8a80','#f0b429','#4ade80','#60a5fa','#c084fc','#fb923c'];
+  let arr = AR_NAMES.slice(0, 3), arSel = 2, arRand = null, arNew = -1, arBusy = false;
+  function arRender(){
+    const n = arr.length;
+    if (arSel !== null && arSel >= n) arSel = n ? n - 1 : null;
+    // código ao vivo
+    let h;
+    if (!n) h = '<span class="k">let</span> <span class="f">lista</span> = [];\n';
+    else {
+      h = '<span class="k">let</span> <span class="f">lista</span> = [\n' + arr.map((v, i) =>
+        '<span class="ln' + (i === arSel && arRand === null ? ' good' : '') + '">  <span class="s">"' + v + '"</span>,  <span class="c">// [' + i + ']</span></span>').join('') + '];\n';
+    }
+    h += '<span class="f">lista</span>.<span class="f">length</span>  <span class="c">// →</span> <span class="res">' + n + '</span>\n';
+    if (arRand !== null && n) {
+      h += '<span class="k">let</span> <span class="f">sorteado</span> = <span class="p">Math</span>.<span class="f">floor</span>(<span class="p">Math</span>.<span class="f">random</span>() * <span class="f">lista</span>.<span class="f">length</span>);  <span class="c">// →</span> <span class="res">' + arRand + '</span>\n' +
+           '<span class="f">lista</span>[<span class="f">sorteado</span>]  <span class="c">// →</span> <span class="res">"' + arr[arRand] + '"</span>';
+    } else if (arSel !== null && n) {
+      h += '<span class="f">lista</span>[<span class="n">' + arSel + '</span>]  <span class="c">// →</span> <span class="res">"' + arr[arSel] + '"</span>';
+    } else {
+      h += '<span class="c">// lista vazia: não há nada para ler</span>';
+    }
+    document.getElementById('arCode').innerHTML = h;
+    // gavetas
+    const shown = arRand !== null ? arRand : arSel;
+    document.getElementById('arGrid').innerHTML = Array.from({length: 6}, (_, i) => {
+      const cls = i < n ? 'ar-cell' : (i === n ? 'ar-cell next' : 'ar-cell empty');
+      const sel = i < n && i === shown ? ' pick' : '';
+      const nw = i === arNew ? ' new' : '';
+      const body = i < n ? '<div class="bx" style="--c:' + AR_COLORS[AR_NAMES.indexOf(arr[i])] + '">' + arr[i] + '</div>'
+                         : '<div class="bx">' + (i === n ? 'vazia' : '') + '</div>';
+      return '<div class="' + cls + sel + nw + '" data-i="' + i + '"><div class="ix">[' + i + ']</div>' + body + '</div>';
+    }).join('');
+    const ru = document.getElementById('arRuler');
+    ru.style.gridColumn = '1 / span ' + Math.max(n, 1);
+    ru.style.visibility = n ? 'visible' : 'hidden';
+    document.getElementById('arRulerT').textContent = 'length = ' + n;
+    document.getElementById('arLen').textContent = n;
+    document.getElementById('arLast').textContent = n ? '[' + (n - 1) + ']' : '—';
+    const next = AR_NAMES[n];
+    const bp = document.getElementById('arPush');
+    bp.textContent = next ? '+ push("' + next + '")' : 'lista cheia';
+    bp.disabled = !next || arBusy;
+    document.getElementById('arPop').disabled = !n || arBusy;
+    document.getElementById('arRand').disabled = !n || arBusy;
+  }
+  document.getElementById('arGrid').addEventListener('click', e => {
+    const c = e.target.closest('.ar-cell'); if (!c || arBusy) return;
+    const i = +c.dataset.i; if (i >= arr.length) return;
+    arSel = i; arRand = null; arNew = -1; arRender();
+  });
+  document.getElementById('arPush').addEventListener('click', e => {
+    if (arr.length >= AR_NAMES.length) return;
+    arr.push(AR_NAMES[arr.length]); arSel = arr.length - 1; arRand = null; arNew = arSel; arRender(); e.currentTarget.blur();
+  });
+  document.getElementById('arPop').addEventListener('click', e => {
+    if (!arr.length) return;
+    arr.pop(); arRand = null; arNew = -1; arSel = arr.length ? arr.length - 1 : null; arRender(); e.currentTarget.blur();
+  });
+  document.getElementById('arRand').addEventListener('click', e => {
+    if (!arr.length || arBusy) return;
+    e.currentTarget.blur();
+    arBusy = true; arNew = -1;
+    const final = Math.floor(Math.random() * arr.length);
+    let step = 0;
+    const tick = () => {
+      if (step < 8) { arRand = Math.floor(Math.random() * arr.length); step++; arRender(); setTimeout(tick, 80 + step * 12); }
+      else { arRand = final; arSel = final; arBusy = false; arRender(); }
+    };
+    tick();
+  });
+  arRender();
+
+  const fig = document.getElementById('fig');
+  document.querySelectorAll('.tri-card').forEach(card => {
+    card.addEventListener('mouseenter', () => { fig.className = 'figure f-' + card.dataset.layer; });
+    card.addEventListener('mouseleave', () => { fig.className = 'figure'; });
+  });
+
+  const flexbox = document.getElementById('flexbox');
+  document.querySelectorAll('.ctrl[data-dir]').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.ctrl[data-dir]').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      flexbox.style.flexDirection = b.dataset.dir;
+    });
+  });
+  document.querySelectorAll('.ctrl[data-just]').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.ctrl[data-just]').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      flexbox.style.justifyContent = b.dataset.just;
+    });
+  });
+
+  const series = ['Dark', 'Breaking Bad', 'Stranger Things', 'The Last of Us', 'Arcane', 'Lost'];
+  const out = document.getElementById('demo-out');
+  document.getElementById('demo-sortear').addEventListener('click', () => {
+    const idx = Math.floor(Math.random() * series.length);
+    out.innerHTML = '<span><small>série sorteada</small>' + series[idx] + '</span>';
+    out.classList.remove('pulse');
+    void out.offsetWidth;
+    out.classList.add('pulse');
+  });
+
+  const start = parseInt(location.hash.replace('#',''), 10);
+  go(Number.isFinite(start) && start > 0 ? start - 1 : 0);
+})();
+</script>
+</body>
+</html>
